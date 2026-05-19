@@ -43,6 +43,9 @@ def list_all_batches() -> list:
         try:
             with open(p, 'r', encoding='utf-8') as f:
                 data = json.load(f)
+            # Skip non-batch files (settings.json, presets.json, etc.)
+            if not isinstance(data, dict) or 'id' not in data or 'created_at' not in data:
+                continue
             batches.append(data)
         except Exception:
             continue
