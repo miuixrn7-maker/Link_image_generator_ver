@@ -39,6 +39,8 @@ async def start_extraction(request: Request, batch_id: str):
         "phase": "scan",
         "articles_done": 0,
         "articles_total": 0,
+        "previews_done": 0,
+        "previews_total": 0,
         "start_time": time.time(),
         "elapsed": 0,
     }
@@ -64,7 +66,12 @@ async def start_extraction(request: Request, batch_id: str):
                 _extraction_progress[batch_id]["phase"] = "previews"
                 meta2 = load_metadata(batch_id)
                 if meta2:
-                    generate_all_previews(batch_id, meta2.get("articles", {}))
+                    def preview_cb(done, total):
+                        p = _extraction_progress[batch_id]
+                        p["previews_done"] = done
+                        p["previews_total"] = total
+                        p["elapsed"] = round(time.time() - p["start_time"], 1)
+                    generate_all_previews(batch_id, meta2.get("articles", {}), progress_cb=preview_cb)
                     log_event(batch_id, "info", "Превью созданы")
             p = _extraction_progress[batch_id]
             p["progress"] = 100
@@ -106,7 +113,12 @@ async def extraction_progress(request: Request, batch_id: str):
         else:
             status_msg = "Обработка изображений..."
     elif phase == "previews":
-        status_msg = "Создание превью..."
+        pdone = prog.get("previews_done", 0)
+        ptotal = prog.get("previews_total", 0)
+        if ptotal:
+            status_msg = f"Создание превью {pdone} из {ptotal}..."
+        else:
+            status_msg = "Создание превью..."
     elif phase == "done":
         status_msg = "Готово"
     else:
