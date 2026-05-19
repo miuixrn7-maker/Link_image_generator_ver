@@ -43,8 +43,10 @@
       ],
       "assignment": {
         "main": "4664.jpg",
-        "zoom": "Vid_kartiny.png",
-        "rest": []
+        "zoom": null,
+        "rest": [
+          "Vid_kartiny.png"
+        ]
       }
     },
     "4665": {

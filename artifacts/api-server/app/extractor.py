@@ -114,9 +114,7 @@ def extract_zip(batch_id: str, zip_path: Path, progress_cb: Optional[Callable] =
             errors = []
 
             if has_duplicates:
-                msg = "Артикул найден в нескольких папках — файлы объединены"
-                warnings.append(msg)
-                log_event(batch_id, "warning", msg, article=article_name)
+                log_event(batch_id, "info", f"Артикул из {len(folder_list)} папок — файлы объединены", article=article_name)
 
             files_meta = []
             used_safe_names: set = set()
