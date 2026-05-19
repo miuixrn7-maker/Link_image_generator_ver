@@ -1,0 +1,32 @@
+{
+  "id": "40f9161e-06b5-493c-a7fe-bf4b661ea204",
+  "name": "Test-batch-001_19-05-2026",
+  "display_name": "Test-batch-001",
+  "created_at": "2026-05-19T15:15:34.611893",
+  "status": "created",
+  "archive_name": null,
+  "archive_size": null,
+  "archive_path": null,
+  "articles": {},
+  "distribution_rules": {
+    "main": {
+      "rule": "first_file",
+      "text": "",
+      "extension": ""
+    },
+    "zoom": {
+      "rule": "contains_text",
+      "text": "Вид картины",
+      "extension": ""
+    }
+  },
+  "stats": {
+    "total_articles": 0,
+    "total_images": 0,
+    "total_errors": 0,
+    "total_warnings": 0
+  },
+  "csv_path": null,
+  "csv_filename": null,
+  "csv_generated_at": null
+}

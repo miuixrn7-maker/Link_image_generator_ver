@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}История партий{% endblock %}
+{% block page_title %}История партий{% endblock %}
+{% block content %}
+{% if request.query_params.get('deleted') %}
+<div class="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">
+  Партия удалена. Ссылки из CSV больше не работают.
+</div>
+{% endif %}
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+    <h3 class="font-semibold text-gray-800 text-sm">Все партии</h3>
+    <a href="/batch/new" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-medium">+ Новая партия</a>
+  </div>
+
+  {% if batches %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 border-b border-gray-100">
+        <tr>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Дата</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Название</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Архив</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Артикулов</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Изображений</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Ошибок</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Статус</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Действия</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for batch in batches %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
+            {{ batch.created_at[:10] if batch.created_at else '' }}
+          </td>
+          <td class="px-4 py-3">
+            <div class="font-medium text-gray-800 text-sm">{{ batch.display_name or batch.name }}</div>
+            <div class="text-xs text-gray-400 font-mono">{{ batch.name }}</div>
+          </td>
+          <td class="px-4 py-3 text-xs text-gray-500">
+            {% if batch.archive_name %}
+            {{ batch.archive_name }}
+            {% if batch.archive_size %}
+            <div class="text-gray-400">{{ (batch.archive_size / 1048576)|round(2) }} МБ</div>
+            {% endif %}
+            {% else %}
+            <span class="text-gray-300">—</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-sm text-center">{{ batch.stats.total_articles if batch.stats else '—' }}</td>
+          <td class="px-4 py-3 text-sm text-center">{{ batch.stats.total_images if batch.stats else '—' }}</td>
+          <td class="px-4 py-3 text-sm text-center">
+            {% if batch.stats and batch.stats.total_errors %}
+            <span class="text-red-600 font-medium">{{ batch.stats.total_errors }}</span>
+            {% else %}
+            <span class="text-gray-300">0</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3">
+            <span class="status-badge status-{{ batch.status }} text-xs px-2 py-0.5 rounded-full">
+              {% set status_labels = {
+                'created': 'создана',
+                'uploaded': 'архив загружен',
+                'extracted': 'распакован',
+                'distributed': 'автораспределение выполнено',
+                'csv_ready': 'CSV готов',
+                'deleted': 'удалено',
+                'error': 'ошибка'
+              } %}
+              {{ status_labels.get(batch.status, batch.status) }}
+            </span>
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-2 flex-wrap">
+              {% if batch.status in ['distributed', 'csv_ready', 'extracted'] %}
+              <a href="/batch/{{ batch.id }}/preview" class="text-xs text-blue-600 hover:underline">Открыть</a>
+              {% endif %}
+              {% if batch.status == 'uploaded' %}
+              <a href="/batch/{{ batch.id }}/upload" class="text-xs text-blue-600 hover:underline">Распаковать</a>
+              {% endif %}
+              {% if batch.status == 'csv_ready' or batch.csv_path %}
+              <a href="/batch/{{ batch.id }}/download-csv" class="text-xs text-green-600 hover:underline">CSV</a>
+              {% endif %}
+              <a href="/logs?batch_id={{ batch.id }}" class="text-xs text-gray-500 hover:underline">Лог</a>
+              <form method="post" action="/batch/{{ batch.id }}/rename" class="inline" onsubmit="return promptRename(this, event, '{{ batch.display_name or batch.name }}')">
+                <input type="hidden" name="new_name" id="rename-val-{{ batch.id }}"/>
+                <button type="submit" class="text-xs text-gray-500 hover:text-blue-600">Переименовать</button>
+              </form>
+              <form method="post" action="/batch/{{ batch.id }}/delete" class="inline" onsubmit="return confirm('Удалить партию «{{ batch.name }}»? Это действие необратимо.')">
+                <button type="submit" class="text-xs text-red-500 hover:text-red-700">Удалить</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="px-5 py-12 text-center text-gray-400 text-sm">
+    История партий пуста. <a href="/batch/new" class="text-blue-600 hover:underline">Создайте первую партию.</a>
+  </div>
+  {% endif %}
+</div>
+<script>
+function promptRename(form, e, currentName) {
+  e.preventDefault();
+  const newName = prompt('Новое название партии:', currentName);
+  if (!newName || !newName.trim()) return false;
+  const batchId = form.action.split('/')[2];
+  document.getElementById('rename-val-' + batchId).value = newName.trim();
+  form.submit();
+  return false;
+}
+</script>
+{% endblock %}

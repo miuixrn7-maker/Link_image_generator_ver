@@ -1,0 +1,32 @@
+{
+  "id": "dca433b1-afe8-4510-9175-cc0b3820be9b",
+  "name": "Ð¢ÐµÑÑ-Ð¿Ð°ÑÑÐ¸Ñ-001_19-05-2026",
+  "display_name": "Ð¢ÐµÑÑ-Ð¿Ð°ÑÑÐ¸Ñ-001",
+  "created_at": "2026-05-19T15:15:20.654666",
+  "status": "created",
+  "archive_name": null,
+  "archive_size": null,
+  "archive_path": null,
+  "articles": {},
+  "distribution_rules": {
+    "main": {
+      "rule": "first_file",
+      "text": "",
+      "extension": ""
+    },
+    "zoom": {
+      "rule": "contains_text",
+      "text": "Вид картины",
+      "extension": ""
+    }
+  },
+  "stats": {
+    "total_articles": 0,
+    "total_images": 0,
+    "total_errors": 0,
+    "total_warnings": 0
+  },
+  "csv_path": null,
+  "csv_filename": null,
+  "csv_generated_at": null
+}

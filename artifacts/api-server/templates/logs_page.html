@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Логи{% endblock %}
+{% block page_title %}Логи{% endblock %}
+{% block content %}
+<div class="flex gap-5 items-start">
+  <!-- Batch selector -->
+  <div class="w-64 shrink-0 bg-white rounded-xl border border-gray-200 shadow-sm">
+    <div class="px-4 py-3 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wide">Партии</div>
+    <div class="divide-y divide-gray-100 max-h-[70vh] overflow-y-auto">
+      {% for batch in batches %}
+      <a href="/logs?batch_id={{ batch.id }}"
+         class="block px-4 py-3 text-sm hover:bg-gray-50 {% if selected_batch_id == batch.id %}bg-blue-50 text-blue-700{% else %}text-gray-700{% endif %}">
+        <div class="font-medium truncate">{{ batch.display_name or batch.name }}</div>
+        <div class="text-xs text-gray-400 mt-0.5">{{ batch.created_at[:10] if batch.created_at else '' }}</div>
+      </a>
+      {% else %}
+      <div class="px-4 py-8 text-center text-gray-400 text-sm">Нет партий</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Log viewer -->
+  <div class="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm">
+    {% if selected_batch %}
+    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+      <div>
+        <h3 class="font-semibold text-gray-800 text-sm">{{ selected_batch.name }}</h3>
+        <p class="text-xs text-gray-400 mt-0.5">{{ log_entries|length }} записей</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="flex border border-gray-200 rounded-lg overflow-hidden text-xs">
+          <button onclick="filterLog('all')" class="log-filter-btn active px-3 py-1.5" data-filter="all">Все</button>
+          <button onclick="filterLog('error')" class="log-filter-btn px-3 py-1.5" data-filter="error">Ошибки</button>
+          <button onclick="filterLog('warning')" class="log-filter-btn px-3 py-1.5" data-filter="warning">Предупреждения</button>
+          <button onclick="filterLog('info')" class="log-filter-btn px-3 py-1.5" data-filter="info">Инфо</button>
+        </div>
+        <a href="/batch/{{ selected_batch.id }}/download-log"
+           class="text-xs text-blue-600 hover:underline">Скачать лог</a>
+      </div>
+    </div>
+    <div class="p-4 font-mono text-xs space-y-1 max-h-[65vh] overflow-y-auto" id="log-container">
+      {% for entry in log_entries %}
+      <div class="log-entry log-{{ entry.level }} flex gap-2">
+        <span class="text-gray-400 shrink-0">{{ entry.ts[:19].replace('T',' ') }}</span>
+        <span class="shrink-0 {% if entry.level == 'error' %}text-red-600{% elif entry.level == 'warning' %}text-yellow-600{% else %}text-gray-500{% endif %}">[{{ entry.level }}]</span>
+        {% if entry.article %}<span class="text-blue-600 shrink-0">{{ entry.article }}:</span>{% endif %}
+        <span class="text-gray-700 break-all">{{ entry.message }}</span>
+      </div>
+      {% else %}
+      <div class="text-gray-400 text-center py-12">Лог пуст</div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="py-16 text-center text-gray-400 text-sm">
+      Выберите партию слева, чтобы просмотреть её лог.
+    </div>
+    {% endif %}
+  </div>
+</div>
+<script>
+function filterLog(type) {
+  document.querySelectorAll('.log-filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === type);
+  });
+  document.querySelectorAll('.log-entry').forEach(e => {
+    if (type === 'all') { e.classList.remove('hidden'); return; }
+    e.classList.toggle('hidden', !e.classList.contains('log-' + type));
+  });
+}
+const lc = document.getElementById('log-container');
+if (lc) lc.scrollTop = lc.scrollHeight;
+</script>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Новая партия{% endblock %}
+{% block page_title %}Новая партия{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto">
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+    <h2 class="text-base font-semibold text-gray-800 mb-1">Создать новую партию</h2>
+    <p class="text-sm text-gray-500 mb-5">Введите название — дата добавится автоматически.</p>
+    <form method="post" action="/batch/new" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Название партии</label>
+        <input type="text" name="batch_name" required placeholder="Например: Весна 2025"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+        <p class="text-xs text-gray-400 mt-1">Итоговое имя: <span id="preview-name" class="font-mono text-gray-600">название_ДД-ММ-ГГГГ</span></p>
+      </div>
+      <div class="flex gap-3">
+        <button type="submit"
+          class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2.5 text-sm transition-colors">
+          Создать партию
+        </button>
+        <a href="/" class="px-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+          Отмена
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+  const inp = document.querySelector('input[name="batch_name"]');
+  const preview = document.getElementById('preview-name');
+  const today = new Date();
+  const dd = String(today.getDate()).padStart(2,'0');
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const yyyy = today.getFullYear();
+  inp.addEventListener('input', () => {
+    preview.textContent = (inp.value || 'название') + '_' + dd + '-' + mm + '-' + yyyy;
+  });
+  preview.textContent = 'название_' + dd + '-' + mm + '-' + yyyy;
+</script>
+{% endblock %}

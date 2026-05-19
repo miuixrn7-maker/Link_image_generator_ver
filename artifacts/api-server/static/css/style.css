@@ -1,0 +1,71 @@
+/* Sidebar */
+.sidebar { transition: width 0.2s ease; }
+
+/* Nav links */
+.nav-link { transition: background 0.1s, color 0.1s; }
+
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  font-weight: 500;
+  border-width: 1px;
+  border-style: solid;
+}
+.status-created { background: #f3f4f6; color: #6b7280; border-color: #d1d5db; }
+.status-uploaded { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+.status-extracted { background: #faf5ff; color: #7c3aed; border-color: #ddd6fe; }
+.status-distributed { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+.status-csv_ready { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+.status-deleted { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+.status-error { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+
+/* Log filter buttons */
+.log-filter-btn {
+  background: white;
+  color: #6b7280;
+  transition: background 0.1s, color 0.1s;
+}
+.log-filter-btn:hover { background: #f9fafb; }
+.log-filter-btn.active { background: #2563eb; color: white; }
+
+/* Drop zones */
+.drop-zone { transition: background 0.15s, border-color 0.15s; }
+.drop-zone.drag-over { border-color: #2563eb; background: rgba(37,99,235,0.04); }
+
+/* Thumb cards */
+.thumb-card { transition: box-shadow 0.15s, transform 0.1s; }
+.thumb-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+.thumb-card[draggable=true]:active { transform: scale(0.97); }
+
+/* Viewer overlay */
+#viewer-overlay { user-select: none; }
+#viewer-img { transition: opacity 0.15s; }
+
+/* Article chevron */
+.article-chevron { transition: transform 0.2s; }
+.article-chevron.rotate-180 { transform: rotate(180deg); }
+
+/* Scrollbar (webkit) */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Form inputs */
+input[type="text"], input[type="password"], select, textarea {
+  outline: none;
+}
+
+/* Drag ghost */
+.drag-ghost { opacity: 0.4; }
+
+/* Table */
+table th { white-space: nowrap; }
+
+/* Fullscreen viewer buttons */
+#viewer-overlay button { user-select: none; }
+
+/* Print hide */
+@media print {
+  .sidebar, header { display: none; }
+}

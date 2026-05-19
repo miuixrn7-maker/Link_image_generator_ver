@@ -1,45 +1,80 @@
-# [Project name]
+# Генератор прямых ссылок
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Внутренний инструмент для обработки ZIP-архивов с изображениями товаров, ручного распределения фото по слотам и генерации CSV с прямыми публичными URL.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Workflow `Start application` — запускает Python/FastAPI сервер на порту 5000
+- URL приложения: `/` (корень)
+- Логин по умолчанию: `admin` / `admin123` (задаётся через env ADMIN_LOGIN / ADMIN_PASSWORD)
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Python 3.11, FastAPI + Uvicorn (Starlette 1.0)
+- Jinja2 (HTML шаблоны), TailwindCSS (CDN)
+- Pillow (обработка изображений)
+- Сессии через itsdangerous (SessionMiddleware)
+- Хранение данных: локальная файловая система (`data/`)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+```
+artifacts/api-server/
+├── main.py                  # точка входа FastAPI
+├── app/
+│   ├── config.py            # настройки, пути
+│   ├── auth.py              # авторизация
+│   ├── extractor.py         # распаковка ZIP
+│   ├── distributor.py       # авто-распределение изображений
+│   ├── preview_gen.py       # генерация превью (Pillow)
+│   ├── csv_export.py        # генерация CSV
+│   ├── metadata.py          # CRUD метаданных партий (JSON)
+│   ├── logger_utils.py      # логирование событий партии
+│   ├── cleanup.py           # удаление партий
+│   ├── utils.py             # вспомогательные функции
+│   └── routes/              # маршруты (по модулям)
+├── templates/               # Jinja2 HTML шаблоны
+├── static/                  # CSS + JS
+│   ├── css/style.css
+│   └── js/viewer.js
+└── data/                    # рабочие данные (gitignore)
+    ├── uploads/             # загруженные ZIP
+    ├── batches/             # распакованные изображения
+    ├── previews/            # превью изображений
+    ├── exports/             # готовые CSV
+    ├── logs/                # логи партий
+    └── metadata/            # JSON метаданные партий
+```
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Starlette 1.0 требует `TemplateResponse(request, name, context)` — request первым аргументом, без него в context
+- BASE_URL env var используется для генерации абсолютных URL в CSV; если пуст — используется REPLIT_DEV_DOMAIN
+- Данные хранятся в JSON-файлах (не в БД) — простота и переносимость для V1
+- Превью генерируются при распаковке и кэшируются в `data/previews/`
+- Архив удаляется после успешной распаковки для экономии места
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Загрузка ZIP-архива с изображениями товаров (структура: папка/артикул/файлы)
+- Авто-распределение по слотам (Главная, Увеличенная фото)
+- Ручная правка через drag-and-drop в интерфейсе превью
+- Генерация CSV с прямыми URL для каждого слота
+- История партий, логи, скачивание CSV
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Интерфейс на русском языке, код на английском
+- Версия 1: без WB/Ozon экспорта, без мультиюзера, без ресайза изображений
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- `configureWorkflow` иногда даёт "failed" даже если сервер запустился — проверять через `getWorkflowStatus`
+- Порт 8080 занят старым Node.js api-server workflow — Python приложение на порту 5000
+- В Starlette 1.0 `TemplateResponse(name, context)` → ошибка; нужно `TemplateResponse(request, name, context)`
+- При развёртывании установить BASE_URL = публичный домен для корректных URL в CSV
 
 ## Pointers
 
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- See the `pnpm-workspace` skill for workspace structure
+- Python deps устанавливаются через pip в `.pythonlibs/`

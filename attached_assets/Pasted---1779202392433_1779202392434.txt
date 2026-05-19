@@ -1,0 +1,763 @@
+Изучил историю переписки и собрал **чистое итоговое ТЗ для нового проекта с нуля**. В ТЗ я убрал конфликтующие/устаревшие пункты из ранних версий: RAR, проверку 3:4, колонку “Ошибки” в CSV, sticky-баги, лишние настройки и будущие версии. Основа взята из финального состояния переписки: ZIP-only, CSV, превью, drag-and-drop, замена файлов >10MB, дубли, переименование, история партий, логи и защита от path traversal. 
+
+Скопируй в Replit одним сообщением:
+
+Build this project from scratch.
+
+IMPORTANT:
+Read the full specification before generating code.
+
+Create only Version 1.
+
+Do not implement future versions:
+
+* no presets
+* no WB/Ozon export
+* no user management
+* no image resizing
+* no API integrations
+* no ready CSV link checker
+
+Project name:
+“Генератор прямых ссылок”
+
+Main goal:
+Create an internal web app that processes ZIP archives with product images, lets the user preview and manually assign images, and generates a CSV file with direct public image URLs.
+
+The app must be:
+
+* simple
+* stable
+* fast
+* practical
+* optimized for real daily usage
+
+UI language:
+Russian.
+
+Code, routes, variable names:
+English.
+
+Tech stack:
+
+* Python
+* FastAPI
+* Jinja2 templates
+* simple CSS or TailwindCSS
+* JavaScript for frontend interactions
+* Pillow for preview generation
+* CSV export
+* JSON metadata storage
+* no database
+
+Supported archive:
+ZIP only.
+
+If user uploads RAR:
+show:
+“RAR архивы не поддерживаются в версии 1. Загрузите ZIP-архив.”
+
+Authorization:
+
+1. Simple login/password.
+2. No registration.
+3. Admin credentials stored in environment variables:
+   ADMIN_LOGIN
+   ADMIN_PASSWORD
+4. Admin pages require login.
+5. Direct image URLs must be public without login.
+
+Main workflow:
+
+1. User logs in.
+2. User creates a new batch.
+3. User enters batch name manually.
+4. App appends current date automatically in format:
+   batchname_DD-MM-YYYY
+5. User uploads ZIP archive via drag-and-drop or file picker.
+6. Upload progress is shown.
+7. User can cancel upload.
+8. If upload is slow or stalled, show:
+   “Загрузка выполняется медленно”
+   and buttons:
+   “Повторить загрузку”
+   “Отмена”
+9. After upload show:
+   “Распаковать архив”
+   “Удалить архив”
+10. User clicks “Распаковать архив”.
+11. Show extraction progress/status in percent.
+12. App extracts ZIP.
+13. App recursively scans folders.
+14. App detects articles.
+15. App opens auto-distribution settings page.
+16. User runs auto-distribution.
+17. App opens preview page.
+18. User manually fixes image assignment with drag-and-drop.
+19. User generates CSV.
+20. User downloads CSV.
+21. User can delete batch.
+
+Archive structure:
+ZIP may contain many folders and subfolders.
+
+Article detection rule:
+The article is the last folder that directly contains supported image files.
+
+Example:
+Категория/
+Подкатегория/
+4664/
+image1.jpg
+image2.png
+
+Article:
+4664
+
+Rules:
+
+1. Scan ZIP recursively.
+2. A folder becomes an article if it directly contains supported images.
+3. Article name = folder name.
+4. Parent folders are ignored for article naming.
+5. File names may be anything.
+6. Do not require filenames to match article.
+7. Nested folders inside an article folder are allowed but should create a warning.
+8. Unsupported files inside an article folder create an error but do not stop the whole batch.
+
+Supported image formats:
+
+* .jpg
+* .jpeg
+* .png
+* .webp
+
+System files:
+Treat as warnings:
+
+* .DS_Store
+* Thumbs.db
+* __MACOSX
+
+Unsupported files:
+If unsupported files are found inside an article folder:
+
+* add error to article/file
+* continue processing batch
+
+Broken files:
+Detect and handle:
+
+* 0 byte files
+* corrupted images
+* images that Pillow cannot open
+
+Show errors:
+
+* “Файл пустой (0 байт)”
+* “Файл повреждён или не является изображением”
+
+Large files:
+If image file size is greater than 10 MB:
+
+* treat as error
+* show red label:
+  “Файл больше 10 MB”
+* do not block the whole batch
+* allow user to replace this image manually
+
+Do not check image aspect ratio.
+Do not add 3:4 validation.
+Do not show “Не 3:4” warnings.
+
+Upload UX:
+
+1. Show upload percentage.
+2. Show uploaded size / total size.
+3. Show upload speed if possible.
+4. Add button:
+   “Отменить загрузку”
+5. If upload is cancelled:
+
+   * abort upload request
+   * delete partially uploaded file if it exists
+   * reset upload UI
+   * show:
+     “Загрузка отменена”
+6. If upload fails:
+
+   * delete incomplete archive
+   * do not create broken batch state
+   * show:
+     “Ошибка загрузки архива. Проверьте соединение и попробуйте снова.”
+
+Filename handling:
+
+1. Recover broken Cyrillic filenames from ZIP when possible.
+2. Support Windows / WinRAR / 7-Zip Cyrillic filename encoding problems.
+3. If filename appears corrupted, try:
+
+   * cp437 → cp866
+   * cp437 → cp1251
+4. Automatically transliterate Cyrillic filenames to safe Latin filenames.
+5. Use safe filenames for storage and URLs.
+6. Store both original and safe filenames in metadata.
+7. Show readable original filename in UI when possible.
+8. CSV must use safe filenames in URLs.
+
+Example:
+Вид картины.png → vid_kartiny.png
+
+Duplicate articles:
+If the same article appears in different folders:
+
+1. Merge files into one article.
+2. Show warning:
+   “Артикул найден в нескольких папках — файлы объединены”
+3. Store source folder paths in metadata.
+4. Add persistent flag:
+   has_duplicates = true
+5. This duplicate warning must remain visible after auto-distribution.
+6. The preview filter “Только с дубликатами” must find such articles.
+7. Do not remove duplicate warning after file renaming.
+
+Duplicate filenames:
+If duplicate filenames appear inside one article:
+
+1. Keep first filename unchanged.
+2. Rename following duplicates with suffix:
+   _duplicate
+   _duplicate_2
+3. Example:
+   photo.jpg
+   photo_duplicate.jpg
+   photo_duplicate_2.jpg
+4. Ensure files never overwrite each other.
+5. Add article warning:
+   “Обнаружены одинаковые имена файлов — выполнено автоматическое переименование”
+6. Add detailed log entry:
+   “Файл photo.jpg переименован в photo_duplicate.jpg из-за конфликта имён”
+7. CSV must contain unique image URLs.
+
+Image replacement:
+For images with error “Файл больше 10 MB”, add button:
+“Заменить изображение”
+
+Replacement behavior:
+
+1. User uploads new image.
+2. New image replaces old image in the same column:
+
+   * Главная
+   * Увелич_фото
+   * Остальные_фото
+3. Validate replacement from scratch.
+4. If new file is under 10 MB:
+
+   * remove old large-file error
+   * remove red label
+   * update article error count
+   * update batch error count
+5. If replacement is also larger than 10 MB:
+
+   * keep error
+   * show:
+     “Загруженный файл также больше 10 MB”
+6. Regenerate preview.
+7. Update metadata.
+8. Update UI without requiring full page refresh if possible.
+9. Add log entry:
+   “Изображение заменено вручную: old_name → new_name”
+10. Show:
+    “Изображение заменено”
+11. If all errors were fixed, show:
+    “Ошибки исправлены”
+
+Auto-distribution:
+Columns:
+
+* Главная
+* Увелич_фото
+* Остальные_фото
+
+Rules:
+
+* first file
+* last file
+* filename contains text
+* file extension
+* no auto-distribution
+
+Defaults:
+
+* Главная = first file
+* Увелич_фото = filename contains “Вид картины”
+
+If multiple files match:
+
+* use first matching file.
+
+If same file selected for both Главная and Увелич_фото:
+
+* priority goes to Главная
+* Увелич_фото uses next matching file
+* if no next match exists, leave Увелич_фото empty.
+
+Fallback rule:
+If:
+
+* Главная has an image
+* Увелич_фото is empty
+* Остальные_фото contains exactly one image
+
+Then:
+move that remaining image into Увелич_фото automatically.
+
+Add log:
+“Увелич_фото заполнено автоматически по fallback-правилу.”
+
+Auto-distribution page:
+Left side:
+
+* rules for Главная
+* rules for Увелич_фото
+* button:
+  “Запустить автораспределение”
+
+Right side:
+
+* live logs
+* warnings
+* errors
+* extraction results
+
+Add filters:
+
+* Все
+* Ошибки
+* Предупреждения
+
+Add buttons:
+
+* “Открыть полный лог”
+* “Скачать лог”
+
+After auto-distribution show:
+
+* “Автораспределение выполнено”
+  or
+* “Автораспределение выполнено с предупреждениями”
+  or
+* “Автораспределение не выполнено”
+
+Preview page:
+Display articles with columns:
+
+* Главная
+* Увелич_фото
+* Остальные_фото
+
+Requirements:
+
+1. Drag-and-drop between columns.
+2. Главная accepts only one image.
+3. Увелич_фото accepts only one image.
+4. Остальные_фото accepts multiple images.
+5. Allow reorder inside Остальные_фото.
+6. Auto-save all changes to JSON metadata.
+7. Restore state after page refresh.
+8. Prevent parallel autosave conflicts.
+9. Show autosave state:
+
+   * “Сохранено”
+   * “Сохраняем...”
+   * “Ошибка сохранения”
+   * “Ошибка сети”
+
+Preview controls:
+
+1. Search by article.
+2. Filters:
+
+   * Все
+   * Только с ошибками
+   * Только с предупреждениями
+   * Без Главной
+   * Без Увелич_фото
+   * Только с дубликатами
+   * Содержит Остальные_фото
+3. Collapse/expand per article.
+4. Collapse all / expand all.
+5. Thumbnail size slider:
+
+   * small
+   * medium
+   * large
+6. Empty drop zones show:
+   “Перетащите изображение сюда”
+7. Do not create duplicated “Назначенные” section.
+
+Preview information:
+
+1. Show archive name and archive size in Preview.
+2. Show filename under each thumbnail.
+3. Under filename show:
+
+   * image resolution, for example 3000×4000
+   * file size in MB
+4. Show warnings/errors on image cards.
+5. Show article warnings/errors clearly.
+
+Preview page actions:
+
+1. Button:
+   “⇄ Поменять местами”
+   Swaps Главная and Увелич_фото for one article.
+
+2. Button:
+   “Поменять местами ВСЕ”
+   Swaps Главная and Увелич_фото for all articles where both exist.
+
+3. Add undo for last bulk swap.
+
+4. Button:
+   “Вернуться к настройкам автораспределения”
+
+If user runs auto-distribution again, show confirmation:
+“Повторное автораспределение перезапишет текущие ручные изменения. Продолжить?”
+
+Options:
+
+* “Да, перезаписать”
+* “Отмена”
+
+If confirmed:
+
+* apply new auto-distribution rules
+* overwrite current manual assignment
+* save new assignment to metadata
+* return to preview
+
+If cancelled:
+
+* keep current manual assignment unchanged
+
+Batch name editing:
+
+1. Add ability to edit batch name in Preview.
+2. Use modal window, not inline input.
+3. After saving, update UI without losing current preview state.
+4. Show error message if saving fails.
+
+File name editing:
+
+1. Add ability to rename files in Preview.
+2. Use modal window.
+3. Preserve file extension automatically.
+4. Transliterate/normalize new filename.
+5. Avoid filename conflicts automatically.
+6. Update:
+
+   * metadata
+   * preview links
+   * CSV links
+   * displayed filename
+   * original_name/display name
+7. After renaming, show new filename immediately in Preview.
+
+Fullscreen viewer:
+Open by click or double-click.
+
+Do not use hover preview.
+
+Requirements:
+
+* dark overlay
+* large preview image
+* close button
+* ESC closes viewer
+* left/right arrows
+* keyboard navigation
+* show article
+* show filename
+* show dimensions
+* show file size
+* show warnings/errors
+* button:
+  “Открыть оригинал”
+
+Prevent duplicated keyboard listeners when viewer is opened multiple times.
+
+Preview image optimization:
+Original images may be very large.
+
+Generate lightweight preview images:
+
+* longest side max 1200px
+* keep aspect ratio
+* quality 80–85%
+* store in previews/
+
+For very large archives, allow lower preview quality, for example 60%, to reduce storage and speed up UI.
+
+Use previews for:
+
+* thumbnails
+* fullscreen viewer
+
+Use originals for:
+
+* CSV links
+
+Preview cleanup:
+
+1. Delete previews automatically after 24 hours.
+2. Do not delete originals, CSV, metadata or logs.
+3. If previews are missing later, regenerate automatically.
+4. Regeneration must not crash page.
+
+CSV export:
+Generate CSV only.
+
+CSV settings:
+
+* encoding: utf-8-sig
+* delimiter: semicolon ;
+
+CSV columns exactly:
+
+* Артикул
+* Путь
+* Главная
+* Увелич_фото
+* Остальные_фото
+
+Rules:
+
+1. “Остальные_фото” is one CSV cell.
+2. Links inside “Остальные_фото” are separated by semicolon.
+3. Because CSV delimiter is also semicolon, properly quote CSV cells using Python csv module.
+4. Use absolute direct public URLs.
+5. URLs must point directly to image files.
+6. Use safe filenames in URLs.
+7. URL-encode paths correctly.
+8. Do not add separate Фото 1, Фото 2 columns.
+9. Do not add “Ошибки” column.
+
+CSV filename:
+batchname_DD-MM-YYYY.csv
+
+History page:
+Show all batches.
+
+Columns:
+
+* date
+* batch name
+* archive name
+* archive size
+* folders/articles
+* images
+* errors
+* warnings
+* status
+* actions
+
+Statuses:
+
+* архив загружен
+* распакован
+* автораспределение выполнено
+* требуется проверка
+* CSV готов
+* удалено
+* ошибка
+
+Actions:
+
+* open
+* download CSV
+* view log
+* delete batch
+* rename batch
+* re-extract archive
+* extract archive if archive uploaded successfully but not yet extracted
+
+For action “Распаковать архив” in history:
+
+1. Show button only if archive was uploaded successfully.
+2. On click, start extraction.
+3. Show extraction status/progress.
+4. On success, redirect to auto-distribution page.
+5. On error, show readable error near the button.
+
+Logs:
+Create log per batch.
+
+Log:
+
+* upload success
+* upload cancellation
+* extraction start/success/failure
+* warnings
+* errors
+* filename recovery
+* transliteration
+* duplicate articles
+* duplicate filenames
+* preview generation
+* preview regeneration
+* auto-distribution
+* manual replacement
+* file renaming
+* batch renaming
+* CSV generation
+* deletion
+* cleanup
+
+Deletion:
+Add button:
+“Удалить партию”
+
+Before deletion show confirmation.
+
+Delete:
+
+* uploaded ZIP
+* extracted images
+* previews
+* CSV
+* logs
+* metadata
+
+After deletion show:
+“Партия удалена. Ссылки из CSV больше не работают.”
+
+Auto-cleanup:
+Delete old batches after 14 days.
+
+Run cleanup:
+
+* on login
+* or homepage open
+
+Security:
+
+1. Prevent path traversal in ZIP extraction.
+2. Prevent path traversal in image routes.
+3. Prevent path traversal in preview routes.
+4. Resolve paths safely and ensure files stay inside allowed directories.
+5. Corrupted ZIP must not crash server.
+6. Empty ZIP must show readable error.
+7. ZIP without images must show readable error.
+8. Broken images must not crash server.
+9. Invalid metadata must not crash server.
+10. Use atomic JSON writes.
+11. Metadata load must tolerate empty or corrupted JSON gracefully.
+12. Use streaming file copy during extraction; do not load large files fully into memory.
+
+Performance:
+
+1. Optimize preview rendering for large batches.
+2. Do not attach drag-and-drop listeners to entire document unnecessarily.
+3. Attach listeners only to updated/root elements.
+4. Avoid full re-render when one article changes.
+5. Keep filters/search after drag-and-drop and rerender.
+6. Lazy-load preview images if needed.
+7. Avoid duplicated log entries.
+8. Avoid duplicated error entries.
+9. Deduplicate errors by article + file + error type.
+10. Prevent browser freezing with hundreds of images.
+
+Storage folders:
+uploads/
+batches/
+previews/
+exports/
+logs/
+metadata/
+
+BASE_URL:
+Use BASE_URL environment variable for absolute public links.
+
+UI design:
+
+1. White/light theme.
+2. Main background: very light gray.
+3. Cards/panels: white.
+4. Subtle borders and shadows.
+5. Blue as main action color.
+6. Warning color yellow/orange.
+7. Error color red.
+8. Success color green.
+9. Left sidebar navigation.
+10. Sidebar can collapse/expand.
+11. Save sidebar state in localStorage.
+12. Main workspace resizes automatically.
+13. Keep UI compact and practical.
+14. Preview toolbar must not create visual gaps or overlay artifacts when scrolling.
+15. Do not overdesign.
+
+Sidebar items:
+
+* Главная
+* Новая партия
+* История партий
+* Логи
+* Настройки
+
+Top bar:
+
+1. Show current page title.
+2. Show current user/admin.
+3. Add logout button.
+
+Testing requirements:
+After implementation, test:
+
+1. ZIP upload.
+2. Upload cancellation.
+3. ZIP extraction.
+4. Empty ZIP.
+5. Corrupted ZIP.
+6. ZIP without images.
+7. Duplicate articles.
+8. Duplicate filenames.
+9. Cyrillic filenames.
+10. Broken image.
+11. 0 byte file.
+12. Large file >10MB.
+13. Image replacement.
+14. Auto-distribution.
+15. Return to auto-distribution from Preview.
+16. Drag-and-drop.
+17. Swap one article.
+18. Swap all.
+19. Undo bulk swap.
+20. Preview filters.
+21. Fullscreen viewer.
+22. File rename.
+23. Batch rename.
+24. CSV generation.
+25. CSV direct links.
+26. History actions.
+27. Batch deletion.
+28. Cleanup.
+
+Final report:
+After building, respond in Russian with:
+
+* what was implemented
+* what was tested
+* any known risks
+* how to run the app
+* which environment variables are required
+
+Important:
+Do not implement Version 2.
+Do not add presets.
+Do not add WB/Ozon export.
+Do not add multiple users.
+Do not add image resizing.
+Do not add CSV link checker.
+Focus only on stable Version 1.

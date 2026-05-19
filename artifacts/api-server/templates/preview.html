@@ -1,0 +1,576 @@
+{% extends "base.html" %}
+{% block title %}Превью — {{ batch.name }}{% endblock %}
+{% block page_title %}Превью партии{% endblock %}
+{% block content %}
+<div id="app" data-batch-id="{{ batch.id }}">
+
+<!-- Top toolbar -->
+<div class="sticky top-[57px] z-20 bg-gray-50 border-b border-gray-200 py-3 mb-4">
+  <div class="flex flex-wrap items-center gap-3">
+    <!-- Batch name -->
+    <div class="flex items-center gap-2">
+      <h2 class="font-semibold text-gray-800 text-sm" id="batch-name-display">{{ batch.name }}</h2>
+      <button onclick="openRenameModal()" class="text-gray-400 hover:text-blue-600" title="Переименовать">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+    </div>
+    {% if batch.archive_name %}
+    <span class="text-xs text-gray-400">{{ batch.archive_name }} ({{ (batch.archive_size / 1048576)|round(2) }} МБ)</span>
+    {% endif %}
+
+    <div class="flex-1"></div>
+
+    <!-- Autosave indicator -->
+    <div id="save-indicator" class="text-xs text-green-600 hidden">Сохранено</div>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-2">
+      <a href="/batch/{{ batch.id }}/distribute"
+         onclick="return confirm('Вернуться к настройкам автораспределения?')"
+         class="text-xs border border-gray-300 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-50">
+        ← К автораспределению
+      </a>
+      <button onclick="swapAll()" class="text-xs border border-gray-300 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-50">
+        Поменять местами ВСЕ
+      </button>
+      <button id="undo-swap-btn" onclick="undoSwapAll()" class="hidden text-xs border border-yellow-300 text-yellow-700 px-3 py-1.5 rounded-lg hover:bg-yellow-50">
+        Отменить обмен
+      </button>
+      <button onclick="generateCSV()"
+        class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors">
+        Создать CSV
+      </button>
+      {% if batch.csv_path %}
+      <a href="/batch/{{ batch.id }}/download-csv"
+         class="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors">
+        Скачать CSV
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Search + filters + collapse + size -->
+  <div class="flex flex-wrap items-center gap-2 mt-3">
+    <input type="text" id="search-input" placeholder="Поиск по артикулу..." oninput="applyFilters()"
+      class="border border-gray-300 rounded-lg px-3 py-1.5 text-xs w-44 focus:outline-none focus:ring-1 focus:ring-blue-500"/>
+
+    <select id="filter-select" onchange="applyFilters()"
+      class="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
+      <option value="all">Все</option>
+      <option value="errors">Только с ошибками</option>
+      <option value="warnings">Только с предупреждениями</option>
+      <option value="no-main">Без Главной</option>
+      <option value="no-zoom">Без Увелич_фото</option>
+      <option value="duplicates">Только с дубликатами</option>
+      <option value="has-rest">Содержит Остальные_фото</option>
+    </select>
+
+    <button onclick="collapseAll()" class="text-xs border border-gray-300 text-gray-600 px-2.5 py-1.5 rounded-lg hover:bg-gray-50">Свернуть все</button>
+    <button onclick="expandAll()" class="text-xs border border-gray-300 text-gray-600 px-2.5 py-1.5 rounded-lg hover:bg-gray-50">Развернуть все</button>
+
+    <div class="flex items-center gap-2 ml-auto">
+      <span class="text-xs text-gray-500">Размер:</span>
+      <input type="range" id="thumb-size" min="80" max="220" value="130" oninput="applyThumbSize(this.value)"
+        class="w-24 h-1.5 accent-blue-600"/>
+    </div>
+  </div>
+</div>
+
+<!-- CSV result -->
+<div id="csv-result" class="hidden mb-4 bg-green-50 border border-green-200 rounded-lg px-4 py-3 flex items-center justify-between">
+  <span class="text-sm text-green-700" id="csv-result-msg"></span>
+  <a id="csv-download-link" href="#" class="text-sm text-green-700 underline font-medium">Скачать CSV</a>
+</div>
+
+<!-- Articles list -->
+<div id="articles-container" class="space-y-3">
+  <!-- Rendered by JS -->
+</div>
+
+<div id="no-results" class="hidden text-center py-12 text-gray-400 text-sm">Ничего не найдено</div>
+
+</div>
+
+<!-- Rename batch modal -->
+<div id="rename-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center" onclick="closeRenameModal(event)">
+  <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm" onclick="event.stopPropagation()">
+    <h3 class="font-semibold text-gray-800 mb-4">Переименовать партию</h3>
+    <input type="text" id="rename-batch-input" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"/>
+    <div id="rename-batch-error" class="hidden text-sm text-red-600 mb-3"></div>
+    <div class="flex gap-3">
+      <button onclick="saveBatchRename()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg">Сохранить</button>
+      <button onclick="closeRenameModal()" class="px-4 py-2 border border-gray-300 text-sm rounded-lg text-gray-600 hover:bg-gray-50">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rename file modal -->
+<div id="rename-file-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center" onclick="closeFileModal(event)">
+  <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm" onclick="event.stopPropagation()">
+    <h3 class="font-semibold text-gray-800 mb-1">Переименовать файл</h3>
+    <p class="text-xs text-gray-500 mb-4">Расширение сохраняется автоматически.</p>
+    <input type="text" id="rename-file-input" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"/>
+    <input type="hidden" id="rename-file-article"/>
+    <input type="hidden" id="rename-file-oldname"/>
+    <div id="rename-file-error" class="hidden text-sm text-red-600 mb-3"></div>
+    <div class="flex gap-3">
+      <button onclick="saveFileRename()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg">Сохранить</button>
+      <button onclick="closeFileModal()" class="px-4 py-2 border border-gray-300 text-sm rounded-lg text-gray-600 hover:bg-gray-50">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const BATCH_ID = document.getElementById('app').dataset.batchId;
+let batchMeta = null;
+let thumbSize = 130;
+let saveTimer = null;
+let savePending = false;
+let lastSwapState = null;
+let dragSrc = null;
+
+async function loadMeta() {
+  const r = await fetch('/batch/' + BATCH_ID + '/api/meta');
+  const d = await r.json();
+  if (d.ok) { batchMeta = d.batch; renderAll(); }
+}
+
+function getPreviewUrl(article, safeName) {
+  return '/previews/' + BATCH_ID + '/' + encodeURIComponent(article) + '/' + encodeURIComponent(safeName);
+}
+function getOrigUrl(article, safeName) {
+  return '/images/' + BATCH_ID + '/' + encodeURIComponent(article) + '/' + encodeURIComponent(safeName);
+}
+
+function fmtSize(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1048576) return (bytes/1024).toFixed(0) + ' КБ';
+  return (bytes/1048576).toFixed(2) + ' МБ';
+}
+
+function renderAll() {
+  if (!batchMeta) return;
+  const container = document.getElementById('articles-container');
+  container.innerHTML = '';
+  const articles = batchMeta.articles || {};
+  const sorted = Object.keys(articles).sort();
+  for (const name of sorted) {
+    const el = renderArticle(name, articles[name]);
+    container.appendChild(el);
+  }
+  applyFilters();
+  applyThumbSize(thumbSize);
+}
+
+function renderArticle(articleName, article) {
+  const div = document.createElement('div');
+  div.className = 'article-card bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden';
+  div.dataset.article = articleName;
+  div.dataset.hasErrors = (article.errors?.length || article.files?.some(f=>f.errors?.length)) ? '1' : '0';
+  div.dataset.hasWarnings = article.warnings?.length ? '1' : '0';
+  div.dataset.hasDuplicates = article.has_duplicates ? '1' : '0';
+  div.dataset.hasMain = article.assignment?.main ? '1' : '0';
+  div.dataset.hasZoom = article.assignment?.zoom ? '1' : '0';
+  div.dataset.hasRest = (article.assignment?.rest?.length > 0) ? '1' : '0';
+
+  const assignment = article.assignment || {};
+  const fileMap = {};
+  (article.files || []).forEach(f => { fileMap[f.safe_name] = f; });
+
+  const errCount = (article.errors?.length||0) + (article.files||[]).reduce((s,f)=>s+(f.errors?.length||0),0);
+  const warnCount = article.warnings?.length || 0;
+
+  div.innerHTML = `
+    <div class="article-header flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100 select-none" onclick="toggleArticle('${articleName}')">
+      <svg class="article-chevron text-gray-400 transition-transform" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      <span class="font-medium text-sm text-gray-800">${articleName}</span>
+      ${article.has_duplicates ? '<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">дубль</span>' : ''}
+      ${errCount ? `<span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">${errCount} ошибок</span>` : ''}
+      ${warnCount ? `<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">${warnCount} предупр.</span>` : ''}
+      <div class="flex-1"></div>
+      <button onclick="event.stopPropagation();swapOne('${articleName}')" class="text-xs border border-gray-200 text-gray-500 px-2 py-1 rounded hover:bg-gray-100">⇄ Поменять</button>
+    </div>
+    <div class="article-body px-4 py-4">
+      ${article.warnings?.length ? `<div class="mb-3 text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded px-3 py-2">${article.warnings.join('<br>')}</div>` : ''}
+      ${article.errors?.length ? `<div class="mb-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">${article.errors.join('<br>')}</div>` : ''}
+      <div class="grid grid-cols-3 gap-4">
+        <div class="column-zone" data-article="${articleName}" data-col="main">
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Главная</div>
+          <div class="drop-zone single-zone min-h-[100px] border-2 border-dashed border-gray-200 rounded-lg p-2 flex flex-wrap gap-2 items-start"
+               data-article="${articleName}" data-col="main"
+               ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+            ${assignment.main ? renderThumb(articleName, fileMap[assignment.main], 'main') : '<div class="drop-placeholder text-xs text-gray-300 w-full text-center py-4">Перетащите изображение сюда</div>'}
+          </div>
+        </div>
+        <div class="column-zone" data-article="${articleName}" data-col="zoom">
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Увелич_фото</div>
+          <div class="drop-zone single-zone min-h-[100px] border-2 border-dashed border-gray-200 rounded-lg p-2 flex flex-wrap gap-2 items-start"
+               data-article="${articleName}" data-col="zoom"
+               ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+            ${assignment.zoom ? renderThumb(articleName, fileMap[assignment.zoom], 'zoom') : '<div class="drop-placeholder text-xs text-gray-300 w-full text-center py-4">Перетащите изображение сюда</div>'}
+          </div>
+        </div>
+        <div class="column-zone" data-article="${articleName}" data-col="rest">
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Остальные_фото</div>
+          <div class="drop-zone multi-zone min-h-[100px] border-2 border-dashed border-gray-200 rounded-lg p-2 flex flex-wrap gap-2 items-start"
+               data-article="${articleName}" data-col="rest"
+               ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+            ${(assignment.rest||[]).map(n => renderThumb(articleName, fileMap[n], 'rest')).join('')}
+            ${!(assignment.rest||[]).length ? '<div class="drop-placeholder text-xs text-gray-300 w-full text-center py-4">Перетащите изображение сюда</div>' : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  return div;
+}
+
+function renderThumb(article, fileInfo, col) {
+  if (!fileInfo) return '';
+  const name = fileInfo.safe_name;
+  const errors = fileInfo.errors || [];
+  const hasError = errors.length > 0;
+  const previewUrl = getPreviewUrl(article, name);
+  const origUrl = getOrigUrl(article, name);
+  const dims = (fileInfo.width && fileInfo.height) ? `${fileInfo.width}×${fileInfo.height}` : '';
+  const size = fmtSize(fileInfo.size);
+  const displayName = fileInfo.display_name || name;
+
+  const allFiles = batchMeta?.articles?.[article]?.files || [];
+
+  return `
+    <div class="thumb-card relative group rounded-lg overflow-hidden border ${hasError ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white'} cursor-grab active:cursor-grabbing select-none"
+         data-article="${article}" data-file="${name}" data-col="${col}"
+         draggable="true"
+         ondragstart="onDragStart(event)"
+         ondragend="onDragEnd(event)"
+         style="width:${thumbSize}px">
+      <img src="${previewUrl}" loading="lazy" alt="${displayName}"
+           class="w-full object-cover block rounded-t-lg"
+           style="height:${thumbSize}px"
+           onclick="openViewer('${article}','${name}')"
+           onerror="this.src='/static/img-error.svg'"/>
+      ${hasError ? `<div class="absolute top-1 left-1 bg-red-600 text-white text-[10px] px-1.5 py-0.5 rounded font-medium leading-none">${errors[0]}</div>` : ''}
+      <div class="p-1.5 space-y-0.5">
+        <div class="text-[10px] text-gray-700 truncate font-medium" title="${displayName}">${displayName}</div>
+        ${dims ? `<div class="text-[9px] text-gray-400">${dims} · ${size}</div>` : `<div class="text-[9px] text-gray-400">${size}</div>`}
+        <div class="flex gap-1 mt-1">
+          ${hasError && errors.includes('Файл больше 10 MB') ? `
+            <label class="cursor-pointer text-[9px] bg-orange-100 text-orange-700 border border-orange-200 px-1.5 py-0.5 rounded hover:bg-orange-200 transition-colors" title="Заменить изображение">
+              Заменить
+              <input type="file" accept="image/*" class="hidden" onchange="replaceFile(event,'${article}','${name}','${col}')"/>
+            </label>
+          ` : ''}
+          <button onclick="openRenameFile('${article}','${name}')" class="text-[9px] text-gray-400 hover:text-blue-600 border border-gray-200 px-1.5 py-0.5 rounded" title="Переименовать">✎</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Drag-and-drop
+function onDragStart(e) {
+  dragSrc = {
+    article: e.currentTarget.dataset.article,
+    file: e.currentTarget.dataset.file,
+    col: e.currentTarget.dataset.col,
+  };
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.classList.add('opacity-50');
+}
+function onDragEnd(e) {
+  e.currentTarget.classList.remove('opacity-50');
+}
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('border-blue-400','bg-blue-50/30');
+}
+function onDragLeave(e) {
+  e.currentTarget.classList.remove('border-blue-400','bg-blue-50/30');
+}
+function onDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('border-blue-400','bg-blue-50/30');
+  if (!dragSrc) return;
+
+  const destZone = e.currentTarget;
+  const destArticle = destZone.dataset.article;
+  const destCol = destZone.dataset.col;
+
+  if (!batchMeta) return;
+  const srcArticle = batchMeta.articles[dragSrc.article];
+  const destArticleData = batchMeta.articles[destArticle];
+  if (!srcArticle || !destArticleData) return;
+
+  const fileName = dragSrc.file;
+  const srcCol = dragSrc.col;
+
+  // Remove from source
+  const srcAssignment = srcArticle.assignment;
+  if (srcCol === 'main') srcAssignment.main = null;
+  else if (srcCol === 'zoom') srcAssignment.zoom = null;
+  else if (srcCol === 'rest') srcAssignment.rest = srcAssignment.rest.filter(f => f !== fileName);
+
+  // Add to dest (same article only for cross-col, inter-article not supported for simplicity)
+  const destAssignment = destArticleData.assignment;
+  if (destCol === 'main') {
+    // If dest main occupied, push back to rest of same article
+    if (destAssignment.main && destAssignment.main !== fileName) {
+      if (destArticle === dragSrc.article) {
+        srcAssignment.rest = srcAssignment.rest || [];
+        srcAssignment.rest.unshift(destAssignment.main);
+      }
+    }
+    destAssignment.main = fileName;
+  } else if (destCol === 'zoom') {
+    if (destAssignment.zoom && destAssignment.zoom !== fileName) {
+      if (destArticle === dragSrc.article) {
+        srcAssignment.rest = srcAssignment.rest || [];
+        srcAssignment.rest.unshift(destAssignment.zoom);
+      }
+    }
+    destAssignment.zoom = fileName;
+  } else if (destCol === 'rest') {
+    if (!destAssignment.rest) destAssignment.rest = [];
+    if (!destAssignment.rest.includes(fileName)) destAssignment.rest.push(fileName);
+  }
+
+  dragSrc = null;
+  renderAll();
+  scheduleSave();
+}
+
+function scheduleSave() {
+  const ind = document.getElementById('save-indicator');
+  ind.textContent = 'Сохраняем...';
+  ind.className = 'text-xs text-gray-500';
+  ind.classList.remove('hidden');
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 800);
+}
+
+async function doSave() {
+  if (!batchMeta) return;
+  const ind = document.getElementById('save-indicator');
+  try {
+    const payload = { articles: {} };
+    for (const [name, a] of Object.entries(batchMeta.articles || {})) {
+      payload.articles[name] = { assignment: a.assignment };
+    }
+    const r = await fetch('/batch/' + BATCH_ID + '/api/save-assignment', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload),
+    });
+    const d = await r.json();
+    if (d.ok) {
+      ind.textContent = 'Сохранено';
+      ind.className = 'text-xs text-green-600';
+    } else {
+      ind.textContent = 'Ошибка сохранения';
+      ind.className = 'text-xs text-red-600';
+    }
+  } catch(e) {
+    ind.textContent = 'Ошибка сети';
+    ind.className = 'text-xs text-red-600';
+  }
+}
+
+async function swapOne(articleName) {
+  const r = await fetch('/batch/' + BATCH_ID + '/api/swap/' + encodeURIComponent(articleName), {method:'POST'});
+  const d = await r.json();
+  if (d.ok && batchMeta) {
+    batchMeta.articles[articleName].assignment = d.assignment;
+    renderAll();
+  }
+}
+
+async function swapAll() {
+  // Store state for undo
+  lastSwapState = JSON.parse(JSON.stringify(
+    Object.fromEntries(Object.entries(batchMeta.articles||{}).map(([k,v]) => [k, JSON.parse(JSON.stringify(v.assignment))]))
+  ));
+  const r = await fetch('/batch/' + BATCH_ID + '/api/swap-all', {method:'POST'});
+  const d = await r.json();
+  if (d.ok) {
+    await loadMeta();
+    document.getElementById('undo-swap-btn').classList.remove('hidden');
+  }
+}
+
+async function undoSwapAll() {
+  if (!lastSwapState || !batchMeta) return;
+  for (const [name, assignment] of Object.entries(lastSwapState)) {
+    if (batchMeta.articles[name]) batchMeta.articles[name].assignment = assignment;
+  }
+  renderAll();
+  await doSave();
+  lastSwapState = null;
+  document.getElementById('undo-swap-btn').classList.add('hidden');
+}
+
+// Filters
+function applyFilters() {
+  const q = (document.getElementById('search-input').value||'').toLowerCase();
+  const f = document.getElementById('filter-select').value;
+  const cards = document.querySelectorAll('.article-card');
+  let visible = 0;
+  cards.forEach(card => {
+    const name = card.dataset.article.toLowerCase();
+    const matchSearch = !q || name.includes(q);
+    let matchFilter = true;
+    if (f === 'errors') matchFilter = card.dataset.hasErrors === '1';
+    else if (f === 'warnings') matchFilter = card.dataset.hasWarnings === '1';
+    else if (f === 'no-main') matchFilter = card.dataset.hasMain !== '1';
+    else if (f === 'no-zoom') matchFilter = card.dataset.hasZoom !== '1';
+    else if (f === 'duplicates') matchFilter = card.dataset.hasDuplicates === '1';
+    else if (f === 'has-rest') matchFilter = card.dataset.hasRest === '1';
+    const show = matchSearch && matchFilter;
+    card.classList.toggle('hidden', !show);
+    if (show) visible++;
+  });
+  document.getElementById('no-results').classList.toggle('hidden', visible > 0);
+}
+
+function applyThumbSize(size) {
+  thumbSize = parseInt(size);
+  document.querySelectorAll('.thumb-card img').forEach(img => {
+    img.style.height = thumbSize + 'px';
+    img.parentElement.style.width = thumbSize + 'px';
+  });
+  document.querySelectorAll('.thumb-card').forEach(c => { c.style.width = thumbSize + 'px'; });
+}
+
+function toggleArticle(name) {
+  const card = document.querySelector(`.article-card[data-article="${name}"]`);
+  if (!card) return;
+  const body = card.querySelector('.article-body');
+  const chevron = card.querySelector('.article-chevron');
+  body.classList.toggle('hidden');
+  chevron.classList.toggle('rotate-180');
+}
+function collapseAll() { document.querySelectorAll('.article-body').forEach(b => b.classList.add('hidden')); document.querySelectorAll('.article-chevron').forEach(c => c.classList.remove('rotate-180')); }
+function expandAll() { document.querySelectorAll('.article-body').forEach(b => b.classList.remove('hidden')); document.querySelectorAll('.article-chevron').forEach(c => c.classList.add('rotate-180')); }
+
+// Rename batch modal
+function openRenameModal() {
+  const inp = document.getElementById('rename-batch-input');
+  inp.value = batchMeta?.display_name || batchMeta?.name || '';
+  document.getElementById('rename-modal').classList.remove('hidden');
+  inp.focus();
+}
+function closeRenameModal(e) {
+  if (!e || e.target === document.getElementById('rename-modal')) {
+    document.getElementById('rename-modal').classList.add('hidden');
+  }
+}
+async function saveBatchRename() {
+  const name = document.getElementById('rename-batch-input').value.trim();
+  if (!name) return;
+  const r = await fetch('/batch/' + BATCH_ID + '/api/rename-batch', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name})
+  });
+  const d = await r.json();
+  if (d.ok) {
+    document.getElementById('batch-name-display').textContent = d.name;
+    if (batchMeta) { batchMeta.name = d.name; batchMeta.display_name = d.display_name; }
+    document.getElementById('rename-modal').classList.add('hidden');
+  } else {
+    document.getElementById('rename-batch-error').textContent = d.error || 'Ошибка сохранения';
+    document.getElementById('rename-batch-error').classList.remove('hidden');
+  }
+}
+
+// Rename file modal
+function openRenameFile(article, fileName) {
+  const ext = fileName.lastIndexOf('.') >= 0 ? fileName.slice(fileName.lastIndexOf('.')) : '';
+  const stem = fileName.slice(0, fileName.length - ext.length);
+  document.getElementById('rename-file-input').value = stem;
+  document.getElementById('rename-file-article').value = article;
+  document.getElementById('rename-file-oldname').value = fileName;
+  document.getElementById('rename-file-modal').classList.remove('hidden');
+  document.getElementById('rename-file-input').focus();
+}
+function closeFileModal(e) {
+  if (!e || e.target === document.getElementById('rename-file-modal')) {
+    document.getElementById('rename-file-modal').classList.add('hidden');
+  }
+}
+async function saveFileRename() {
+  const article = document.getElementById('rename-file-article').value;
+  const oldName = document.getElementById('rename-file-oldname').value;
+  const newStem = document.getElementById('rename-file-input').value.trim();
+  if (!newStem) return;
+  const r = await fetch('/batch/' + BATCH_ID + '/api/rename-file', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({article, old_name: oldName, new_name: newStem})
+  });
+  const d = await r.json();
+  if (d.ok) {
+    document.getElementById('rename-file-modal').classList.add('hidden');
+    await loadMeta();
+  } else {
+    document.getElementById('rename-file-error').textContent = d.error || 'Ошибка';
+    document.getElementById('rename-file-error').classList.remove('hidden');
+  }
+}
+
+// Replace file
+async function replaceFile(event, article, oldName, col) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const form = new FormData();
+  form.append('article', article);
+  form.append('old_name', oldName);
+  form.append('column', col);
+  form.append('file', file);
+  const r = await fetch('/batch/' + BATCH_ID + '/api/replace-file', {method:'POST', body:form});
+  const d = await r.json();
+  if (!d.ok) { alert(d.error || 'Ошибка замены'); return; }
+  await loadMeta();
+}
+
+// CSV
+async function generateCSV() {
+  const r = await fetch('/batch/' + BATCH_ID + '/api/generate-csv', {method:'POST'});
+  const d = await r.json();
+  if (d.ok) {
+    const el = document.getElementById('csv-result');
+    document.getElementById('csv-result-msg').textContent = `CSV готов: ${d.rows} строк`;
+    document.getElementById('csv-download-link').href = '/batch/' + BATCH_ID + '/download-csv';
+    el.classList.remove('hidden');
+  } else {
+    alert(d.error || 'Ошибка генерации CSV');
+  }
+}
+
+// Viewer
+function openViewer(article, fileName) {
+  const fileInfo = batchMeta?.articles?.[article]?.files?.find(f => f.safe_name === fileName);
+  const allFiles = batchMeta?.articles?.[article]?.files || [];
+  viewerOpen(getPreviewUrl(article, fileName), {
+    article,
+    filename: fileInfo?.display_name || fileName,
+    width: fileInfo?.width,
+    height: fileInfo?.height,
+    size: fileInfo?.size,
+    errors: fileInfo?.errors || [],
+    origUrl: getOrigUrl(article, fileName),
+    allImages: allFiles.map(f => ({ src: getPreviewUrl(article, f.safe_name), safeName: f.safe_name })),
+    currentIdx: allFiles.findIndex(f => f.safe_name === fileName),
+  });
+}
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeViewer();
+  if (e.key === 'ArrowLeft') viewerNav(-1);
+  if (e.key === 'ArrowRight') viewerNav(1);
+  if (e.key === 'Enter' && document.getElementById('rename-batch-input') === document.activeElement) saveBatchRename();
+  if (e.key === 'Enter' && document.getElementById('rename-file-input') === document.activeElement) saveFileRename();
+});
+
+loadMeta();
+</script>
+{% endblock %}
