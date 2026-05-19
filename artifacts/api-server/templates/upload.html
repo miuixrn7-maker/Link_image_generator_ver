@@ -34,8 +34,11 @@
         <span id="upload-size-text"></span>
       </div>
       <button id="cancel-btn" class="text-sm text-red-500 hover:text-red-700">Отменить загрузку</button>
-      <div id="slow-warning" class="hidden bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-700 space-y-2">
-        <div>⚠️ Загрузка выполняется медленно</div>
+      <div id="slow-warning" class="hidden bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-700">
+        <div class="flex items-center justify-between mb-2">
+          <span>⚠️ Загрузка выполняется медленно</span>
+          <span id="slow-eta" class="text-xs font-medium text-yellow-600"></span>
+        </div>
         <div class="flex gap-2">
           <button onclick="retryUpload()" class="text-xs bg-yellow-600 text-white px-3 py-1.5 rounded hover:bg-yellow-700">Повторить загрузку</button>
           <button onclick="cancelUpload()" class="text-xs border border-yellow-400 text-yellow-700 px-3 py-1.5 rounded hover:bg-yellow-50">Отмена</button>
@@ -88,10 +91,11 @@
 
 <script>
 const BATCH_ID = '{{ batch.id }}';
+const SLOW_THRESHOLD = 5 * 1024 * 1024; // 5 MB/s
 let currentFile = null;
 let controller = null;
-let slowTimer = null;
 let retryFile = null;
+let speedSamples = []; // [{time, loaded}]
 
 const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
@@ -111,7 +115,27 @@ document.getElementById('cancel-btn').addEventListener('click', cancelUpload);
 function fmtSize(bytes) {
   if (bytes < 1024) return bytes + ' Б';
   if (bytes < 1048576) return (bytes/1024).toFixed(1) + ' КБ';
-  return (bytes/1048576).toFixed(2) + ' МБ';
+  if (bytes < 1073741824) return (bytes/1048576).toFixed(2) + ' МБ';
+  return (bytes/1073741824).toFixed(2) + ' ГБ';
+}
+
+function fmtTime(sec) {
+  sec = Math.ceil(sec);
+  if (sec < 60) return sec + ' с';
+  const m = Math.floor(sec / 60), s = sec % 60;
+  if (m < 60) return m + ' мин ' + (s > 0 ? s + ' с' : '');
+  return Math.floor(m/60) + ' ч ' + (m%60) + ' мин';
+}
+
+function calcSpeed() {
+  if (speedSamples.length < 2) return 0;
+  const now = Date.now();
+  // Sliding window: last 4 seconds
+  speedSamples = speedSamples.filter(s => s.time >= now - 4000);
+  if (speedSamples.length < 2) return 0;
+  const oldest = speedSamples[0], newest = speedSamples[speedSamples.length - 1];
+  const dt = (newest.time - oldest.time) / 1000;
+  return dt > 0 ? (newest.loaded - oldest.loaded) / dt : 0;
 }
 
 function showStatus(msg, type) {
@@ -149,35 +173,43 @@ async function startUpload(file) {
   document.getElementById('slow-warning').classList.add('hidden');
   document.getElementById('upload-filename').textContent = file.name;
 
+  speedSamples = [];
   controller = new AbortController();
-  let startTime = Date.now();
-  let slowTimeout = setTimeout(() => {
-    document.getElementById('slow-warning').classList.remove('hidden');
-  }, 15000);
+  controller._xhr = null;
 
   const xhr = new XMLHttpRequest();
   xhr.open('POST', '/batch/' + BATCH_ID + '/upload');
   xhr.setRequestHeader('X-Filename', encodeURIComponent(file.name));
   xhr.timeout = 0;
-
   controller._xhr = xhr;
 
   xhr.upload.addEventListener('progress', e => {
-    if (e.lengthComputable) {
-      const pct = Math.round(e.loaded / e.total * 100);
-      document.getElementById('upload-bar').style.width = pct + '%';
-      document.getElementById('upload-progress-text').textContent = pct + '%';
-      document.getElementById('upload-size-text').textContent = fmtSize(e.loaded) + ' / ' + fmtSize(e.total);
-      const elapsed = (Date.now() - startTime) / 1000;
-      if (elapsed > 0) {
-        const speed = e.loaded / elapsed;
-        document.getElementById('upload-speed').textContent = fmtSize(speed) + '/с';
+    if (!e.lengthComputable) return;
+    const now = Date.now();
+    speedSamples.push({time: now, loaded: e.loaded});
+
+    const pct = Math.round(e.loaded / e.total * 100);
+    document.getElementById('upload-bar').style.width = pct + '%';
+    document.getElementById('upload-progress-text').textContent = pct + '%';
+    document.getElementById('upload-size-text').textContent = fmtSize(e.loaded) + ' / ' + fmtSize(e.total);
+
+    const speed = calcSpeed();
+    if (speed > 0) {
+      document.getElementById('upload-speed').textContent = fmtSize(speed) + '/с';
+      const slowWarning = document.getElementById('slow-warning');
+      if (speed < SLOW_THRESHOLD) {
+        // Show warning + ETA
+        const remaining = e.total - e.loaded;
+        const eta = fmtTime(remaining / speed);
+        document.getElementById('slow-eta').textContent = 'Осталось ~' + eta;
+        slowWarning.classList.remove('hidden');
+      } else {
+        slowWarning.classList.add('hidden');
       }
     }
   });
 
   xhr.onload = function() {
-    clearTimeout(slowTimeout);
     document.getElementById('slow-warning').classList.add('hidden');
     try {
       const data = JSON.parse(xhr.responseText);
@@ -196,7 +228,7 @@ async function startUpload(file) {
   };
 
   xhr.onerror = xhr.ontimeout = function() {
-    clearTimeout(slowTimeout);
+    document.getElementById('slow-warning').classList.add('hidden');
     showStatus('Ошибка загрузки архива. Проверьте соединение и попробуйте снова.', 'error');
     document.getElementById('drop-zone').classList.remove('hidden');
     document.getElementById('upload-section').classList.add('hidden');

@@ -1,0 +1,5 @@
+{
+  "batch_expire_days": 14,
+  "preview_expire_hours": 24,
+  "thumbnail_quality": 60
+}
