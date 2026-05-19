@@ -1,0 +1,305 @@
+Audit the current project against the original Version 1 specification.
+
+Goal:
+Find what is missing, incomplete, incorrectly implemented, or different from the specification.
+
+Do NOT add new features.
+Do NOT redesign the app.
+Do NOT rewrite the project from scratch.
+
+First, compare the current implementation with the full Version 1 specification I provided earlier.
+
+Check these areas:
+
+1. Main workflow
+
+* login
+* create batch
+* batch name with DD-MM-YYYY date
+* ZIP upload
+* upload progress
+* cancel upload
+* slow/stalled upload warning
+* delete uploaded archive
+* extract archive
+* extraction progress/status
+* recursive article detection
+* auto-distribution page
+* preview page
+* manual drag-and-drop edits
+* CSV export
+* history page
+* logs
+* delete batch
+* auto-cleanup
+
+2. Archive handling
+
+* ZIP only
+* RAR rejection message
+* corrupted ZIP handling
+* empty ZIP handling
+* ZIP without images handling
+* recursive folder scan
+* article = last folder that directly contains images
+* nested folder warnings
+* unsupported file errors
+* system file warnings
+
+3. Filename handling
+
+* broken Cyrillic filename recovery
+* cp437 → cp866
+* cp437 → cp1251
+* transliteration to safe Latin filenames
+* original name stored
+* safe name used in URLs
+* readable name shown in UI
+* filename conflicts resolved safely
+
+4. Duplicate handling
+
+* duplicate articles are merged
+* has_duplicates flag is stored
+* duplicate warning remains after auto-distribution
+* duplicate filter works
+* duplicate filenames get _duplicate / _duplicate_2
+* files never overwrite each other
+* duplicate warnings are visible in Preview
+
+5. File validation
+
+* 0 byte file error
+* corrupted image error
+* unsupported file error
+* file >10MB error
+* no 3:4 validation
+* no 32MB threshold
+* errors/warnings visible in Preview
+* counters are correct
+
+6. Image replacement
+
+* “Заменить изображение” appears for >10MB files
+* replacement validates from scratch
+* old errors are removed after successful replacement
+* preview regenerates
+* metadata updates
+* UI updates without full reload if possible
+* same column is preserved
+* replacement larger than 10MB keeps one error only
+
+7. Auto-distribution
+
+* columns: Главная / Увелич_фото / Остальные_фото
+* rules: first file / last file / filename contains text / file extension / no auto-distribution
+* default Главная = first file
+* default Увелич_фото = filename contains “Вид картины”
+* same image conflict handling
+* fallback rule for Увелич_фото
+* logs on the right side
+* full log/download log buttons
+* correct status messages
+
+8. Preview page
+
+* no duplicated “Назначенные” section
+* drag-and-drop between columns
+* Главная max 1 image
+* Увелич_фото max 1 image
+* Остальные_фото multiple images
+* reorder Остальные_фото
+* autosave
+* autosave status
+* state restores after refresh
+* search
+* filters:
+
+  * Все
+  * Только с ошибками
+  * Только с предупреждениями
+  * Без Главной
+  * Без Увелич_фото
+  * Только с дубликатами
+  * Содержит Остальные_фото
+* collapse/expand article
+* collapse all / expand all
+* thumbnail size slider
+* empty drop zone text
+* archive name and archive size shown
+* filename shown
+* dimensions and file size shown
+* warnings/errors shown
+* sticky toolbar has no scroll visual bugs
+
+9. Preview actions
+
+* swap one article
+* swap all
+* undo last bulk swap
+* return to auto-distribution settings
+* confirmation before rerunning auto-distribution after manual edits
+* batch rename via modal
+* file rename via modal
+* renamed filename displays correctly
+* CSV links update after rename
+
+10. Fullscreen viewer
+
+* opens on click/double click
+* no hover preview
+* dark overlay
+* close button
+* ESC close
+* left/right navigation
+* keyboard navigation
+* shows filename/article/dimensions/file size/warnings/errors
+* “Открыть оригинал”
+* no duplicated keyboard listeners
+
+11. Preview optimization
+
+* preview images generated
+* max longest side 1200px
+* previews used for thumbnails/fullscreen
+* originals used for CSV links
+* preview cleanup after 24 hours
+* previews regenerate automatically if missing
+
+12. CSV export
+
+* CSV only
+* encoding utf-8-sig
+* delimiter ;
+* exact columns:
+  Артикул
+  Путь
+  Главная
+  Увелич_фото
+  Остальные_фото
+* no “Ошибки” column
+* no Фото 1 / Фото 2 columns
+* Остальные_фото is one cell with links separated by ;
+* CSV cells are quoted correctly
+* absolute direct public URLs
+* safe filenames in URLs
+* URL encoding works
+* duplicate URLs do not appear
+* filename format batchname_DD-MM-YYYY.csv
+
+13. History page
+
+* date
+* batch name
+* archive name
+* archive size
+* articles count
+* images count
+* errors count
+* warnings count
+* status
+* actions:
+
+  * open
+  * download CSV
+  * view log
+  * delete batch
+  * rename batch
+  * re-extract archive
+  * extract archive if archive uploaded but not extracted
+
+14. Logs
+
+* per-batch logs
+* view log
+* download log
+* log upload/cancel/error
+* extraction start/success/failure
+* filename recovery
+* transliteration
+* unsupported files
+* broken files
+* > 10MB files
+* duplicate articles
+* duplicate filenames
+* preview generation/regeneration
+* auto-distribution
+* fallback
+* image replacement
+* image renaming
+* batch renaming
+* CSV generation
+* deletion
+* cleanup
+
+15. Deletion and cleanup
+
+* delete uploaded ZIP
+* delete extracted originals
+* delete previews
+* delete CSV
+* delete logs
+* delete metadata
+* message after deletion:
+  “Партия удалена. Ссылки из CSV больше не работают.”
+* auto-delete old batches after 14 days
+* preview cleanup after 24 hours
+
+16. Security and reliability
+
+* path traversal protection in ZIP extraction
+* path traversal protection in image routes
+* path traversal protection in preview routes
+* safe path resolving
+* corrupted ZIP does not crash server
+* broken images do not crash server
+* invalid metadata does not crash server
+* atomic JSON writes
+* empty/corrupted metadata handled gracefully
+* streaming file copy during extraction
+* API input validation
+* no duplicate errors/log spam
+
+17. Performance
+
+* optimized for 100+ articles / hundreds of images
+* preview rendering optimized
+* drag-and-drop listeners not attached globally every rerender
+* only changed article rerenders when possible
+* search/filter state preserved after rerender
+* lazy loading if needed
+* fullscreen viewer does not accumulate event listeners
+* CSV button does not stay disabled after error
+
+18. UI
+
+* white/light theme
+* collapsible left sidebar
+* sidebar state in localStorage
+* topbar with title/user/logout
+* compact admin dashboard layout
+* no dark sidebar
+* consistent buttons
+* Настройки page may be placeholder only:
+  “Настройки будут добавлены в следующей версии.”
+
+After audit, give me a Russian report with a checklist:
+
+Format:
+
+1. ✅ Implemented correctly
+2. ⚠️ Partially implemented / needs improvement
+3. ❌ Missing
+4. 🐛 Bugs found
+5. 🔧 Recommended fixes
+
+For every missing or partial item:
+
+* explain what is missing
+* list affected files
+* estimate risk: low / medium / high
+* suggest exact fix
+
+Then ask me for confirmation before making changes.
+
+Do not change code until I approve the fix list.
