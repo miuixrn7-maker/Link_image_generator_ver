@@ -4,3 +4,4 @@ artifacts/api-server/data/batches/f99b1357-74db-42ae-83f8-bb02a5b6a898/7777/fzqv
 artifacts/api-server/data/uploads/f99b1357-74db-42ae-83f8-bb02a5b6a898.zip filter=lfs diff=lfs merge=lfs -text
 artifacts/api-server/data/batches/adb38f0b-863f-479e-a63e-f9f0e7588443/7777/fzqv0ra1zdrmr0cy7get4sm4b8_result_0.png filter=lfs diff=lfs merge=lfs -text
 artifacts/api-server/data/uploads/adb38f0b-863f-479e-a63e-f9f0e7588443.zip filter=lfs diff=lfs merge=lfs -text
+artifacts/api-server/data/uploads/42a8871e-72e3-4ea5-b856-2ddf9c6f4b6e.zip filter=lfs diff=lfs merge=lfs -text
