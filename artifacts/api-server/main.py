@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
+from urllib.parse import unquote as _unquote
 from app.config import SESSION_SECRET, PORT, DATA_DIR
 from app.routes.auth_routes import router as auth_router
 from app.routes.batch_routes import router as batch_router

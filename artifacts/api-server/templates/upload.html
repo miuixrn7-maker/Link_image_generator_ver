@@ -80,7 +80,7 @@
   {% if batch.archive_name %}
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      showAfterUpload('{{ batch.archive_name }}', {{ batch.archive_size or 0 }});
+      showAfterUpload('{{ batch.archive_name | urldecode }}', {{ batch.archive_size or 0 }});
     });
   </script>
   {% endif %}

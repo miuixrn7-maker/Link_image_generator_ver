@@ -2,13 +2,13 @@ import uuid
 from datetime import datetime
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
+
 from pathlib import Path
 
 from app.auth import is_authenticated, require_auth, current_user
 from app.metadata import save_metadata, load_metadata
 
-templates = Jinja2Templates(directory=str(Path(__file__).parent.parent.parent / "templates"))
+from app.templates import templates
 router = APIRouter()
 
 

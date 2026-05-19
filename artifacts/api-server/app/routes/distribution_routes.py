@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
+
 from pathlib import Path
 
 from app.auth import is_authenticated, current_user
@@ -9,7 +9,7 @@ from app.distributor import run_auto_distribution
 from app.logger_utils import get_log
 from app.presets_manager import load_presets
 
-templates = Jinja2Templates(directory=str(Path(__file__).parent.parent.parent / "templates"))
+from app.templates import templates
 router = APIRouter()
 
 _DEFAULT_DIST = {

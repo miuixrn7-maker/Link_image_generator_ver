@@ -42,7 +42,7 @@
           </td>
           <td class="px-4 py-3 text-xs text-gray-500">
             {% if batch.archive_name %}
-            {{ batch.archive_name }}
+            {{ batch.archive_name | urldecode }}
             {% if batch.archive_size %}
             <div class="text-gray-400">{{ (batch.archive_size / 1048576)|round(2) }} МБ</div>
             {% endif %}

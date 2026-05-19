@@ -1,7 +1,7 @@
 import os
 from fastapi import APIRouter, Request, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
+
 from pathlib import Path
 
 from app.auth import is_authenticated, current_user
@@ -9,7 +9,7 @@ from app.config import UPLOADS_DIR
 from app.metadata import load_metadata, save_metadata
 from app.logger_utils import log_event
 
-templates = Jinja2Templates(directory=str(Path(__file__).parent.parent.parent / "templates"))
+from app.templates import templates
 router = APIRouter()
 
 
@@ -35,11 +35,13 @@ async def upload_archive(request: Request, batch_id: str):
     if not meta:
         return JSONResponse({"ok": False, "error": "Партия не найдена"}, status_code=404)
 
+    from urllib.parse import unquote
     filename = request.headers.get("X-Filename", "archive.zip")
     try:
         filename = filename.encode('latin-1').decode('utf-8')
     except Exception:
         pass
+    filename = unquote(filename)
 
     filename_lower = filename.lower()
 

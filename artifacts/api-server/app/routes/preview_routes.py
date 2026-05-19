@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from fastapi import APIRouter, Request, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, FileResponse
-from fastapi.templating import Jinja2Templates
+
 
 from app.auth import is_authenticated, current_user
 from app.metadata import load_metadata, save_metadata
@@ -12,7 +12,7 @@ from app.preview_gen import generate_preview
 from app.config import BATCHES_DIR, MAX_IMAGE_SIZE_BYTES
 from app.utils import safe_filename, make_unique_filename
 
-templates = Jinja2Templates(directory=str(Path(__file__).parent.parent.parent / "templates"))
+from app.templates import templates
 router = APIRouter()
 
 
@@ -253,7 +253,10 @@ async def replace_file(
 async def gen_csv(request: Request, batch_id: str):
     if not is_authenticated(request):
         return JSONResponse({"ok": False}, status_code=401)
-    base_url = os.environ.get("BASE_URL", "")
+    base_url = os.environ.get("BASE_URL", "").strip()
+    if not base_url:
+        host = request.headers.get("host") or request.url.netloc
+        base_url = f"{request.url.scheme}://{host}"
     result = generate_csv(batch_id, base_url)
     return JSONResponse(result)
 

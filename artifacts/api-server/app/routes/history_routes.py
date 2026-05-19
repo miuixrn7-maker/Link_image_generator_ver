@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
-from fastapi.templating import Jinja2Templates
+
 from pathlib import Path
 
 from app.auth import is_authenticated, current_user
@@ -8,7 +8,7 @@ from app.metadata import list_all_batches, load_metadata, save_metadata
 from app.logger_utils import get_log
 from app.cleanup import delete_batch
 
-templates = Jinja2Templates(directory=str(Path(__file__).parent.parent.parent / "templates"))
+from app.templates import templates
 router = APIRouter()
 
 
@@ -94,7 +94,10 @@ async def download_csv(request: Request, batch_id: str):
     if not csv_path or not Path(csv_path).exists():
         from app.csv_export import generate_csv
         import os
-        base_url = os.environ.get("BASE_URL", "")
+        base_url = os.environ.get("BASE_URL", "").strip()
+        if not base_url:
+            host = request.headers.get("host") or request.url.netloc
+            base_url = f"{request.url.scheme}://{host}"
         result = generate_csv(batch_id, base_url)
         if not result["ok"]:
             return RedirectResponse(url="/history", status_code=302)

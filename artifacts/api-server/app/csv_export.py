@@ -25,8 +25,9 @@ def _resolve_base_url(base_url: str) -> str:
 
 
 def build_image_url(batch_id: str, article: str, safe_name: str, base_url: str) -> str:
-    encoded = quote(safe_name, safe='')
-    return f"{base_url}/images/{batch_id}/{article}/{encoded}"
+    encoded_article = quote(article, safe='')
+    encoded_name = quote(safe_name, safe='')
+    return f"{base_url}/images/{batch_id}/{encoded_article}/{encoded_name}"
 
 
 def generate_csv(batch_id: str, base_url: str) -> dict:

@@ -15,7 +15,7 @@
       </button>
     </div>
     {% if batch.archive_name %}
-    <span class="text-xs text-gray-400">{{ batch.archive_name }}{% if batch.archive_size %} ({{ (batch.archive_size / 1048576)|round(2) }} МБ){% endif %}</span>
+    <span class="text-xs text-gray-400">{{ batch.archive_name | urldecode }}{% if batch.archive_size %} ({{ (batch.archive_size / 1048576)|round(2) }} МБ){% endif %}</span>
     {% endif %}
 
     <div class="flex-1"></div>

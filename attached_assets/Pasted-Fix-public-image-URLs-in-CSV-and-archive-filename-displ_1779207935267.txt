@@ -1,0 +1,84 @@
+Fix public image URLs in CSV and archive filename display.
+
+1. CSV image URLs must be absolute public URLs
+
+Current problem:
+CSV contains relative URLs like:
+/images/a1ca8b30-800f-4fc4-8133-1bb24a932924/4664/4664.jpg
+
+This is wrong because the link cannot be pasted directly into browser or marketplace upload tools.
+
+Expected:
+CSV must contain full absolute URLs like:
+https://your-replit-domain.replit.dev/images/batch_id/4664/4664.jpg
+
+Requirements:
+
+1. If BASE_URL environment variable is set, use it as base for all CSV image links.
+2. If BASE_URL is empty or not set, automatically derive base URL from the current request:
+   scheme + host
+3. Example:
+   request.url.scheme = https
+   request.headers["host"] = c4f90496-a1fb-41eb-b6f9-bbfe0ad45693-00-2i0i0satvk79h.sisko.replit.dev
+   result:
+   https://c4f90496-a1fb-41eb-b6f9-bbfe0ad45693-00-2i0i0satvk79h.sisko.replit.dev
+4. CSV links must always be absolute.
+5. CSV links must be directly openable in browser.
+6. The links must point to original images, not preview images.
+7. Do not generate relative links in CSV.
+
+Important:
+When generating CSV, pass the request base URL into the CSV export function if needed.
+
+2. Fix URL encoding in image links
+
+Paths with Cyrillic or spaces must be URL-encoded only in the URL, but not in display names.
+
+Example:
+Readable filename:
+картины по номерам_2026-05-18_ec2703
+
+URL:
+%D0%BA%D0%B0%D1%80%D1%82%D0%B8%D0%BD%D1%8B%20...
+
+This is acceptable inside URL, but UI must show readable text.
+
+3. Fix archive filename display
+
+Current problem:
+Archive name is displayed as:
+%D0%BA%D0%B0%D1%80%D1%82%D0%B8%D0%BD%D1%8B%2010%D1%88%D1%82.zip
+
+Expected display:
+картины 10шт.zip
+
+Requirements:
+
+1. Decode archive filename for UI display.
+
+2. Use urllib.parse.unquote or equivalent before showing archive name in:
+
+   * Upload page
+   * Preview page
+   * History page
+   * Logs if applicable
+
+3. Store original readable archive name in metadata.
+
+4. Use safe normalized filename internally on disk if needed.
+
+5. Do not show URL-encoded archive names in UI.
+
+6. Verify after fix
+
+Test:
+
+1. Upload ZIP with Cyrillic name:
+   картины 10шт.zip
+2. UI must show:
+   картины 10шт.zip
+3. Generate CSV.
+4. CSV image links must be absolute:
+   https://.../images/...
+5. Open CSV link in browser.
+6. Image must open directly.

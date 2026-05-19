@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
+
 from pathlib import Path
 
 from app.auth import is_authenticated, current_user
 from app.settings_manager import load_settings, save_settings, DEFAULTS
 from app.presets_manager import load_presets, add_or_update_preset, delete_preset
 
-templates = Jinja2Templates(directory=str(Path(__file__).parent.parent.parent / "templates"))
+from app.templates import templates
 router = APIRouter()
 
 
