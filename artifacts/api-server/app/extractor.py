@@ -108,13 +108,9 @@ def extract_zip(batch_id: str, zip_path: Path, progress_cb: Optional[Callable] =
             article_dir = batch_dir / article_name
             article_dir.mkdir(parents=True, exist_ok=True)
 
-            has_duplicates = len(folder_list) > 1
             source_folders = [fp for fp, _ in folder_list]
             warnings = []
             errors = []
-
-            if has_duplicates:
-                log_event(batch_id, "info", f"Артикул из {len(folder_list)} папок — файлы объединены", article=article_name)
 
             files_meta = []
             used_safe_names: set = set()
@@ -211,7 +207,7 @@ def extract_zip(batch_id: str, zip_path: Path, progress_cb: Optional[Callable] =
             articles_meta[article_name] = {
                 "article": article_name,
                 "source_folders": source_folders,
-                "has_duplicates": has_duplicates,
+                "has_duplicates": False,
                 "warnings": warnings,
                 "errors": errors,
                 "files": files_meta,
