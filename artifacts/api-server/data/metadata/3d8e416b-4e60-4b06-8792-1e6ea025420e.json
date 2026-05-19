@@ -8,22 +8,22 @@
   "archive_size": 242750614,
   "archive_path": "/home/runner/workspace/artifacts/api-server/data/uploads/3d8e416b-4e60-4b06-8792-1e6ea025420e.zip",
   "articles": {
-    "4669": {
-      "article": "4669",
-      "display_article": "4669",
+    "4672": {
+      "article": "4672",
+      "display_article": "4672",
       "source_path": "картины/картины",
       "source_folders": [
-        "картины/картины/4669"
+        "картины/картины/4672"
       ],
       "has_duplicates": false,
       "warnings": [],
       "errors": [],
       "files": [
         {
-          "safe_name": "4669.jpg",
-          "original_name": "4669.jpg",
-          "display_name": "4669.jpg",
-          "size": 6969792,
+          "safe_name": "4672.jpg",
+          "original_name": "4672.jpg",
+          "display_name": "4672.jpg",
+          "size": 6093992,
           "width": 3000,
           "height": 4000,
           "errors": [],
@@ -33,15 +33,91 @@
           "safe_name": "Vid_kartiny.png",
           "original_name": "Вид картины.png",
           "display_name": "Вид картины.png",
-          "size": 885168,
-          "width": 3999,
+          "size": 600396,
+          "width": 4006,
           "height": 5000,
           "errors": [],
           "warnings": []
         }
       ],
       "assignment": {
-        "main": "4669.jpg",
+        "main": "4672.jpg",
+        "zoom": "Vid_kartiny.png",
+        "rest": []
+      }
+    },
+    "4664__d57c": {
+      "article": "4664__d57c",
+      "display_article": "4664",
+      "source_path": "картины/картины",
+      "source_folders": [
+        "картины/картины/4664"
+      ],
+      "has_duplicates": true,
+      "warnings": [],
+      "errors": [],
+      "files": [
+        {
+          "safe_name": "4664.jpg",
+          "original_name": "4664.jpg",
+          "display_name": "4664.jpg",
+          "size": 6845522,
+          "width": 3000,
+          "height": 4000,
+          "errors": [],
+          "warnings": []
+        },
+        {
+          "safe_name": "Vid_kartiny.png",
+          "original_name": "Вид картины.png",
+          "display_name": "Вид картины.png",
+          "size": 872174,
+          "width": 5000,
+          "height": 4000,
+          "errors": [],
+          "warnings": []
+        }
+      ],
+      "assignment": {
+        "main": "4664.jpg",
+        "zoom": "Vid_kartiny.png",
+        "rest": []
+      }
+    },
+    "4664__c519": {
+      "article": "4664__c519",
+      "display_article": "4664",
+      "source_path": "картины",
+      "source_folders": [
+        "картины/4664"
+      ],
+      "has_duplicates": true,
+      "warnings": [],
+      "errors": [],
+      "files": [
+        {
+          "safe_name": "4664.jpg",
+          "original_name": "4664.jpg",
+          "display_name": "4664.jpg",
+          "size": 6845522,
+          "width": 3000,
+          "height": 4000,
+          "errors": [],
+          "warnings": []
+        },
+        {
+          "safe_name": "Vid_kartiny.png",
+          "original_name": "Вид картины.png",
+          "display_name": "Вид картины.png",
+          "size": 872174,
+          "width": 5000,
+          "height": 4000,
+          "errors": [],
+          "warnings": []
+        }
+      ],
+      "assignment": {
+        "main": "4664.jpg",
         "zoom": "Vid_kartiny.png",
         "rest": []
       }
@@ -198,33 +274,79 @@
         "rest": []
       }
     },
-    "7777": {
-      "article": "7777",
-      "display_article": "7777",
+    "4667": {
+      "article": "4667",
+      "display_article": "4667",
       "source_path": "картины/картины",
       "source_folders": [
-        "картины/картины/7777"
+        "картины/картины/4667"
       ],
       "has_duplicates": false,
       "warnings": [],
       "errors": [],
       "files": [
         {
-          "safe_name": "fzqv0ra1zdrmr0cy7get4sm4b8_result_0.png",
-          "original_name": "fzqv0ra1zdrmr0cy7get4sm4b8_result_0.png",
-          "display_name": "fzqv0ra1zdrmr0cy7get4sm4b8_result_0.png",
-          "size": 162864610,
-          "width": 11520,
-          "height": 15360,
-          "errors": [
-            "Файл больше 10 MB"
-          ],
+          "safe_name": "4667.jpg",
+          "original_name": "4667.jpg",
+          "display_name": "4667.jpg",
+          "size": 7576559,
+          "width": 3000,
+          "height": 4000,
+          "errors": [],
+          "warnings": []
+        },
+        {
+          "safe_name": "Vid_kartiny.png",
+          "original_name": "Вид картины.png",
+          "display_name": "Вид картины.png",
+          "size": 732128,
+          "width": 5000,
+          "height": 3999,
+          "errors": [],
           "warnings": []
         }
       ],
       "assignment": {
-        "main": "fzqv0ra1zdrmr0cy7get4sm4b8_result_0.png",
-        "zoom": null,
+        "main": "4667.jpg",
+        "zoom": "Vid_kartiny.png",
+        "rest": []
+      }
+    },
+    "4669": {
+      "article": "4669",
+      "display_article": "4669",
+      "source_path": "картины/картины",
+      "source_folders": [
+        "картины/картины/4669"
+      ],
+      "has_duplicates": false,
+      "warnings": [],
+      "errors": [],
+      "files": [
+        {
+          "safe_name": "4669.jpg",
+          "original_name": "4669.jpg",
+          "display_name": "4669.jpg",
+          "size": 6969792,
+          "width": 3000,
+          "height": 4000,
+          "errors": [],
+          "warnings": []
+        },
+        {
+          "safe_name": "Vid_kartiny.png",
+          "original_name": "Вид картины.png",
+          "display_name": "Вид картины.png",
+          "size": 885168,
+          "width": 3999,
+          "height": 5000,
+          "errors": [],
+          "warnings": []
+        }
+      ],
+      "assignment": {
+        "main": "4669.jpg",
+        "zoom": "Vid_kartiny.png",
         "rest": []
       }
     },
@@ -262,120 +384,6 @@
       ],
       "assignment": {
         "main": "4673.jpg",
-        "zoom": "Vid_kartiny.png",
-        "rest": []
-      }
-    },
-    "4672": {
-      "article": "4672",
-      "display_article": "4672",
-      "source_path": "картины/картины",
-      "source_folders": [
-        "картины/картины/4672"
-      ],
-      "has_duplicates": false,
-      "warnings": [],
-      "errors": [],
-      "files": [
-        {
-          "safe_name": "4672.jpg",
-          "original_name": "4672.jpg",
-          "display_name": "4672.jpg",
-          "size": 6093992,
-          "width": 3000,
-          "height": 4000,
-          "errors": [],
-          "warnings": []
-        },
-        {
-          "safe_name": "Vid_kartiny.png",
-          "original_name": "Вид картины.png",
-          "display_name": "Вид картины.png",
-          "size": 600396,
-          "width": 4006,
-          "height": 5000,
-          "errors": [],
-          "warnings": []
-        }
-      ],
-      "assignment": {
-        "main": "4672.jpg",
-        "zoom": "Vid_kartiny.png",
-        "rest": []
-      }
-    },
-    "4664__d57c": {
-      "article": "4664__d57c",
-      "display_article": "4664",
-      "source_path": "картины/картины",
-      "source_folders": [
-        "картины/картины/4664"
-      ],
-      "has_duplicates": true,
-      "warnings": [],
-      "errors": [],
-      "files": [
-        {
-          "safe_name": "4664.jpg",
-          "original_name": "4664.jpg",
-          "display_name": "4664.jpg",
-          "size": 6845522,
-          "width": 3000,
-          "height": 4000,
-          "errors": [],
-          "warnings": []
-        },
-        {
-          "safe_name": "Vid_kartiny.png",
-          "original_name": "Вид картины.png",
-          "display_name": "Вид картины.png",
-          "size": 872174,
-          "width": 5000,
-          "height": 4000,
-          "errors": [],
-          "warnings": []
-        }
-      ],
-      "assignment": {
-        "main": "4664.jpg",
-        "zoom": "Vid_kartiny.png",
-        "rest": []
-      }
-    },
-    "4664__c519": {
-      "article": "4664__c519",
-      "display_article": "4664",
-      "source_path": "картины",
-      "source_folders": [
-        "картины/4664"
-      ],
-      "has_duplicates": true,
-      "warnings": [],
-      "errors": [],
-      "files": [
-        {
-          "safe_name": "4664.jpg",
-          "original_name": "4664.jpg",
-          "display_name": "4664.jpg",
-          "size": 6845522,
-          "width": 3000,
-          "height": 4000,
-          "errors": [],
-          "warnings": []
-        },
-        {
-          "safe_name": "Vid_kartiny.png",
-          "original_name": "Вид картины.png",
-          "display_name": "Вид картины.png",
-          "size": 872174,
-          "width": 5000,
-          "height": 4000,
-          "errors": [],
-          "warnings": []
-        }
-      ],
-      "assignment": {
-        "main": "4664.jpg",
         "zoom": "Vid_kartiny.png",
         "rest": []
       }
@@ -418,41 +426,33 @@
         "rest": []
       }
     },
-    "4667": {
-      "article": "4667",
-      "display_article": "4667",
+    "7777": {
+      "article": "7777",
+      "display_article": "7777",
       "source_path": "картины/картины",
       "source_folders": [
-        "картины/картины/4667"
+        "картины/картины/7777"
       ],
       "has_duplicates": false,
       "warnings": [],
       "errors": [],
       "files": [
         {
-          "safe_name": "4667.jpg",
-          "original_name": "4667.jpg",
-          "display_name": "4667.jpg",
-          "size": 7576559,
-          "width": 3000,
-          "height": 4000,
-          "errors": [],
-          "warnings": []
-        },
-        {
-          "safe_name": "Vid_kartiny.png",
-          "original_name": "Вид картины.png",
-          "display_name": "Вид картины.png",
-          "size": 732128,
-          "width": 5000,
-          "height": 3999,
-          "errors": [],
+          "safe_name": "fzqv0ra1zdrmr0cy7get4sm4b8_result_0.png",
+          "original_name": "fzqv0ra1zdrmr0cy7get4sm4b8_result_0.png",
+          "display_name": "fzqv0ra1zdrmr0cy7get4sm4b8_result_0.png",
+          "size": 162864610,
+          "width": 11520,
+          "height": 15360,
+          "errors": [
+            "Файл больше 10 MB"
+          ],
           "warnings": []
         }
       ],
       "assignment": {
-        "main": "4667.jpg",
-        "zoom": "Vid_kartiny.png",
+        "main": "fzqv0ra1zdrmr0cy7get4sm4b8_result_0.png",
+        "zoom": null,
         "rest": []
       }
     }
