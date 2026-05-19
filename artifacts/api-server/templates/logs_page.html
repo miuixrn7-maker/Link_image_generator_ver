@@ -33,6 +33,7 @@
           <button onclick="filterLog('error')" class="log-filter-btn px-3 py-1.5" data-filter="error">Ошибки</button>
           <button onclick="filterLog('warning')" class="log-filter-btn px-3 py-1.5" data-filter="warning">Предупреждения</button>
           <button onclick="filterLog('info')" class="log-filter-btn px-3 py-1.5" data-filter="info">Инфо</button>
+          <button onclick="filterLog('translit')" class="log-filter-btn px-3 py-1.5" data-filter="translit">Транслитерация</button>
         </div>
         <a href="/batch/{{ selected_batch.id }}/download-log"
            class="text-xs text-blue-600 hover:underline">Скачать лог</a>
@@ -64,6 +65,11 @@ function filterLog(type) {
   });
   document.querySelectorAll('.log-entry').forEach(e => {
     if (type === 'all') { e.classList.remove('hidden'); return; }
+    if (type === 'translit') {
+      const text = e.textContent.toLowerCase();
+      e.classList.toggle('hidden', !text.includes('транслитерац'));
+      return;
+    }
     e.classList.toggle('hidden', !e.classList.contains('log-' + type));
   });
 }

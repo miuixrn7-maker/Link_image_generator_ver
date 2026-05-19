@@ -1,0 +1,526 @@
+[
+  {
+    "ts": "2026-05-19T19:11:31.782322",
+    "level": "info",
+    "message": "Архив загружен: ядиск_с_мусором_20шт.zip (361208070 байт)"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.084935",
+    "level": "info",
+    "message": "Начало распаковки архива"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.185881",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4461"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.192515",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4461"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.193811",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4461"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.197494",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4461"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.298677",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4455"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.327433",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4455"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.328736",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4455"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.335135",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4455"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.400749",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4449"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.411910",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4449"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.413231",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4449"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.419022",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4449"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.473611",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4467"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.489706",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4467"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.491079",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4467"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.496241",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4467"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.562530",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4459"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.571122",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4459"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.572621",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4459"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.577670",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4459"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.649429",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4456"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.656575",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4456"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.658111",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4456"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.662801",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4456"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.712814",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4468"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.721436",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4468"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.722740",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4468"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.727452",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4468"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.782373",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4453"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.785209",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4453"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.786345",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4453"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.788222",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4453"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.896116",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4450"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.914756",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4450"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.916319",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4450"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.924580",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4450"
+  },
+  {
+    "ts": "2026-05-19T19:11:35.993402",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4465"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.011494",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4465"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.013341",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4465"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.023025",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4465"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.087709",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4452"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.096209",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4452"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.097602",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4452"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.101492",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4452"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.163074",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4460"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.171774",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4460"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.173328",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4460"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.177713",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4460"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.268874",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4454"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.281742",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4454"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.283311",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4454"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.290121",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4454"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.348643",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4458"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.358173",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4458"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.359787",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4458"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.365368",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4458"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.426493",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4463"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.443025",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4463"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.444773",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4463"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.451739",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4463"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.538412",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4462"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.569616",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4462"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.571554",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4462"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.580020",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4462"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.592691",
+    "level": "info",
+    "message": "Транслитерация: 1099370959063664219 ¬«»¿∩.png → 1099370959063664219.png",
+    "article": "4466"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.612741",
+    "level": "info",
+    "message": "Транслитерация: 1099370959063664219 ¬«»¿∩_vectorized.png → 1099370959063664219_vectorized.png",
+    "article": "4466"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.653006",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4466"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.677990",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4466"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.680040",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4466"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.688248",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4466"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.749681",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4451"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.767016",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4451"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.769046",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4451"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.775777",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4451"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.798746",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4457"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.860458",
+    "level": "info",
+    "message": "Транслитерация: Вид картины.png → Vid_kartiny.png",
+    "article": "4464"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.878954",
+    "level": "info",
+    "message": "Транслитерация: Исходное изображение.png → Iskhodnoe_izobrazhenie.png",
+    "article": "4464"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.880955",
+    "level": "info",
+    "message": "Транслитерация: Карта цветов.png → Karta_tsvetov.png",
+    "article": "4464"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.891031",
+    "level": "info",
+    "message": "Транслитерация: Картина по номерам.png → Kartina_po_nomeram.png",
+    "article": "4464"
+  },
+  {
+    "ts": "2026-05-19T19:11:36.894461",
+    "level": "info",
+    "message": "Распаковка завершена. Артикулов: 20, изображений: 136"
+  },
+  {
+    "ts": "2026-05-19T19:12:18.260038",
+    "level": "info",
+    "message": "Превью сгенерированы: 136 шт."
+  },
+  {
+    "ts": "2026-05-19T19:12:18.261146",
+    "level": "info",
+    "message": "Превью созданы"
+  },
+  {
+    "ts": "2026-05-19T19:13:54.953677",
+    "level": "info",
+    "message": "Запуск автораспределения"
+  },
+  {
+    "ts": "2026-05-19T19:13:54.957145",
+    "level": "info",
+    "message": "Автораспределение выполнено"
+  },
+  {
+    "ts": "2026-05-19T19:14:41.686681",
+    "level": "info",
+    "message": "Запуск автораспределения"
+  },
+  {
+    "ts": "2026-05-19T19:14:41.690472",
+    "level": "info",
+    "message": "Автораспределение выполнено"
+  },
+  {
+    "ts": "2026-05-19T19:16:15.218557",
+    "level": "info",
+    "message": "CSV сгенерирован: С яндекс диска 20шт тест_19-05-2026.csv, строк: 20"
+  }
+]

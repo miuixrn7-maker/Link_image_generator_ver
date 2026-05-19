@@ -51,9 +51,10 @@
 
     <!-- After upload actions -->
     <div id="after-upload" class="hidden mt-5 space-y-3">
-      <div class="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-700">
-        ✓ Архив загружен: <span id="uploaded-name" class="font-medium"></span>
-        (<span id="uploaded-size"></span>)
+      <div class="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-700 flex items-center justify-between">
+        <span>✓ Архив загружен: <span id="uploaded-name" class="font-medium"></span>
+        (<span id="uploaded-size"></span>)</span>
+        <span id="upload-elapsed" class="text-xs text-green-600 ml-3 shrink-0"></span>
       </div>
       <div class="flex gap-3">
         <button id="extract-btn" onclick="startExtraction()"
@@ -68,15 +69,12 @@
     </div>
 
     <!-- Extraction progress -->
-    <div id="extraction-section" class="hidden mt-5 space-y-3">
+    <div id="extraction-section" class="hidden mt-5">
       <div class="flex items-center gap-2 text-sm text-gray-700">
-        <svg class="animate-spin text-blue-600" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        <svg id="extract-spinner" class="animate-spin text-blue-600 shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        <svg id="extract-check" class="hidden text-green-600 shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
         <span id="extract-status-text">Сканирование архива...</span>
       </div>
-      <div class="w-full bg-gray-100 rounded-full h-2">
-        <div id="extract-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width:0%"></div>
-      </div>
-      <div id="extract-progress-text" class="text-xs text-gray-500">0%</div>
     </div>
   </div>
 
@@ -96,6 +94,8 @@ let currentFile = null;
 let controller = null;
 let retryFile = null;
 let speedSamples = []; // [{time, loaded}]
+let uploadStartTime = null;
+let extractStartTime = null;
 
 const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
@@ -147,13 +147,19 @@ function showStatus(msg, type) {
   el.classList.remove('hidden');
 }
 
-function showAfterUpload(name, size) {
+function showAfterUpload(name, size, elapsedMs) {
   document.getElementById('drop-zone').classList.add('hidden');
   document.getElementById('upload-section').classList.add('hidden');
   document.getElementById('after-upload').classList.remove('hidden');
   document.getElementById('status-msg').classList.add('hidden');
   document.getElementById('uploaded-name').textContent = name;
   document.getElementById('uploaded-size').textContent = fmtSize(size);
+  const el = document.getElementById('upload-elapsed');
+  if (elapsedMs != null) {
+    el.textContent = 'за ' + fmtTime(elapsedMs / 1000);
+  } else {
+    el.textContent = '';
+  }
 }
 
 async function startUpload(file) {
@@ -173,6 +179,7 @@ async function startUpload(file) {
   document.getElementById('slow-warning').classList.add('hidden');
   document.getElementById('upload-filename').textContent = file.name;
 
+  uploadStartTime = Date.now();
   speedSamples = [];
   controller = new AbortController();
   controller._xhr = null;
@@ -213,7 +220,8 @@ async function startUpload(file) {
     try {
       const data = JSON.parse(xhr.responseText);
       if (data.ok) {
-        showAfterUpload(file.name, file.size);
+        const elapsed = uploadStartTime ? Date.now() - uploadStartTime : null;
+        showAfterUpload(file.name, file.size, elapsed);
       } else {
         showStatus(data.error || 'Ошибка загрузки архива. Проверьте соединение и попробуйте снова.', 'error');
         document.getElementById('drop-zone').classList.remove('hidden');
@@ -262,6 +270,10 @@ let extractPollInterval = null;
 async function startExtraction() {
   document.getElementById('after-upload').classList.add('hidden');
   document.getElementById('extraction-section').classList.remove('hidden');
+  document.getElementById('extract-spinner').classList.remove('hidden');
+  document.getElementById('extract-check').classList.add('hidden');
+  document.getElementById('extract-status-text').textContent = 'Сканирование архива...';
+  extractStartTime = Date.now();
 
   const resp = await fetch('/batch/' + BATCH_ID + '/extract', {method:'POST'});
   const data = await resp.json();
@@ -276,9 +288,6 @@ async function startExtraction() {
     try {
       const r = await fetch('/batch/' + BATCH_ID + '/extract/progress');
       const prog = await r.json();
-      const pct = prog.progress || 0;
-      document.getElementById('extract-bar').style.width = pct + '%';
-      document.getElementById('extract-progress-text').textContent = pct + '%';
       if (prog.status_msg) document.getElementById('extract-status-text').textContent = prog.status_msg;
       if (prog.done) {
         clearInterval(extractPollInterval);
@@ -287,7 +296,12 @@ async function startExtraction() {
           document.getElementById('extraction-section').classList.add('hidden');
           document.getElementById('after-upload').classList.remove('hidden');
         } else if (prog.result && prog.result.ok) {
-          window.location.href = '/batch/' + BATCH_ID + '/distribute';
+          const elapsed = prog.elapsed != null ? prog.elapsed : (extractStartTime ? (Date.now() - extractStartTime) / 1000 : null);
+          document.getElementById('extract-spinner').classList.add('hidden');
+          document.getElementById('extract-check').classList.remove('hidden');
+          document.getElementById('extract-status-text').textContent =
+            'Распаковка завершена' + (elapsed ? ' за ' + fmtTime(elapsed) : '');
+          setTimeout(() => { window.location.href = '/batch/' + BATCH_ID + '/distribute'; }, 1200);
         } else {
           const err = prog.result ? prog.result.error : 'Неизвестная ошибка';
           showStatus(err || 'Ошибка распаковки', 'error');

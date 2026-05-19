@@ -1,4 +1,5 @@
 import threading
+import time
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from pathlib import Path
@@ -16,14 +17,6 @@ router = APIRouter()
 # In-memory extraction progress store
 _extraction_progress: dict[str, dict] = {}
 
-_PHASE_LABELS = {
-    "scan": "Сканирование архива...",
-    "extract": "Обработка изображений...",
-    "previews": "Создание превью...",
-    "done": "Готово",
-    "error": "Ошибка",
-}
-
 
 @router.post("/batch/{batch_id}/extract")
 async def start_extraction(request: Request, batch_id: str):
@@ -39,16 +32,30 @@ async def start_extraction(request: Request, batch_id: str):
         return JSONResponse({"ok": False, "error": "Архив не найден. Загрузите архив."}, status_code=400)
 
     _extraction_progress[batch_id] = {
-        "progress": 0, "done": False, "error": None, "result": None, "phase": "scan"
+        "progress": 0,
+        "done": False,
+        "error": None,
+        "result": None,
+        "phase": "scan",
+        "articles_done": 0,
+        "articles_total": 0,
+        "start_time": time.time(),
+        "elapsed": 0,
     }
 
     def run_extraction():
-        def progress_cb(pct):
-            _extraction_progress[batch_id]["progress"] = pct
+        def progress_cb(pct, articles_done=None, articles_total=None):
+            p = _extraction_progress[batch_id]
+            p["progress"] = pct
+            p["elapsed"] = round(time.time() - p["start_time"], 1)
+            if articles_done is not None:
+                p["articles_done"] = articles_done
+            if articles_total is not None:
+                p["articles_total"] = articles_total
             if pct < 50:
-                _extraction_progress[batch_id]["phase"] = "scan"
-            elif pct < 100:
-                _extraction_progress[batch_id]["phase"] = "extract"
+                p["phase"] = "scan"
+            elif pct < 96:
+                p["phase"] = "extract"
 
         try:
             result = extract_zip(batch_id, Path(archive_path), progress_cb=progress_cb)
@@ -59,13 +66,17 @@ async def start_extraction(request: Request, batch_id: str):
                 if meta2:
                     generate_all_previews(batch_id, meta2.get("articles", {}))
                     log_event(batch_id, "info", "Превью созданы")
-            _extraction_progress[batch_id]["progress"] = 100
-            _extraction_progress[batch_id]["done"] = True
-            _extraction_progress[batch_id]["phase"] = "done"
+            p = _extraction_progress[batch_id]
+            p["progress"] = 100
+            p["done"] = True
+            p["phase"] = "done"
+            p["elapsed"] = round(time.time() - p["start_time"], 1)
         except Exception as e:
-            _extraction_progress[batch_id]["error"] = str(e)
-            _extraction_progress[batch_id]["done"] = True
-            _extraction_progress[batch_id]["phase"] = "error"
+            p = _extraction_progress[batch_id]
+            p["error"] = str(e)
+            p["done"] = True
+            p["phase"] = "error"
+            p["elapsed"] = round(time.time() - p["start_time"], 1)
             log_event(batch_id, "error", f"Ошибка распаковки: {e}")
 
     t = threading.Thread(target=run_extraction, daemon=True)
@@ -79,7 +90,26 @@ async def extraction_progress(request: Request, batch_id: str):
     if not is_authenticated(request):
         return JSONResponse({"ok": False}, status_code=401)
     prog = _extraction_progress.get(batch_id, {
-        "progress": 0, "done": False, "error": None, "result": None, "phase": "scan"
+        "progress": 0, "done": False, "error": None, "result": None,
+        "phase": "scan", "articles_done": 0, "articles_total": 0, "elapsed": 0,
     })
-    status_msg = _PHASE_LABELS.get(prog.get("phase", "scan"), "Распаковка архива...")
-    return JSONResponse({**prog, "status_msg": status_msg})
+    phase = prog.get("phase", "scan")
+    adone = prog.get("articles_done", 0)
+    atotal = prog.get("articles_total", 0)
+    elapsed = prog.get("elapsed", 0)
+
+    if phase == "scan":
+        status_msg = "Сканирование архива..."
+    elif phase == "extract":
+        if atotal:
+            status_msg = f"Распаковано {adone} из {atotal} артикулов..."
+        else:
+            status_msg = "Обработка изображений..."
+    elif phase == "previews":
+        status_msg = "Создание превью..."
+    elif phase == "done":
+        status_msg = "Готово"
+    else:
+        status_msg = "Ошибка"
+
+    return JSONResponse({**prog, "status_msg": status_msg, "elapsed": elapsed})

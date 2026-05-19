@@ -28,5 +28,15 @@
     "zoom_text": "",
     "zoom_ext": "",
     "fallback_enabled": false
+  },
+  {
+    "name": "первый_последний",
+    "main_rule": "first_file",
+    "main_text": "",
+    "main_ext": "",
+    "zoom_rule": "last_file",
+    "zoom_text": "Вид картины",
+    "zoom_ext": "",
+    "fallback_enabled": true
   }
 ]

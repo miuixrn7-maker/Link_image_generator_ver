@@ -88,6 +88,15 @@ def extract_zip(batch_id: str, zip_path: Path, progress_cb: Optional[Callable] =
                 log_event(batch_id, "warning", f"Системный файл пропущен: {decoded_name}")
                 continue
 
+            # Normalize the filename segment independently — it may be garbled even
+            # when the rest of the path decoded correctly (e.g. mixed encoding flags).
+            if (is_likely_broken_cyrillic(filename)
+                    or '\ufffd' in filename
+                    or any('\udc80' <= c <= '\udcff' for c in filename)):
+                fixed_fn = fix_zip_filename(filename)
+                if any('\u0400' <= c <= '\u04ff' for c in fixed_fn):
+                    filename = fixed_fn
+
             ext = Path(filename).suffix.lower()
             folder_path = "/".join(parts[:-1]) if len(parts) > 1 else ""
 
@@ -178,7 +187,11 @@ def extract_zip(batch_id: str, zip_path: Path, progress_cb: Optional[Callable] =
 
         for entry in article_entries:
             if progress_cb:
-                progress_cb(50 + int(article_idx / total_articles * 45))
+                progress_cb(
+                    50 + int(article_idx / total_articles * 45),
+                    articles_done=article_idx,
+                    articles_total=total_articles,
+                )
             article_idx += 1
 
             article_id = entry["article_id"]
@@ -216,8 +229,6 @@ def extract_zip(batch_id: str, zip_path: Path, progress_cb: Optional[Callable] =
                         log_event(batch_id, "warning", warn_msg, article=display_article)
 
                 if ext not in SUPPORTED_IMAGES:
-                    errors.append(f"Неподдерживаемый формат файла: {filename}")
-                    log_event(batch_id, "error", f"Неподдерживаемый формат: {filename}", article=display_article)
                     continue
 
                 try:
