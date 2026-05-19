@@ -1,0 +1,167 @@
+[
+  {
+    "ts": "2026-05-19T19:25:05.053609",
+    "level": "info",
+    "message": "Архив загружен: мозаика 20шт.zip (162348148 байт)"
+  },
+  {
+    "ts": "2026-05-19T19:25:18.922644",
+    "level": "info",
+    "message": "Начало распаковки архива"
+  },
+  {
+    "ts": "2026-05-19T19:25:18.978193",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5298"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.027176",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5291"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.061305",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5292"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.107627",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5285"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.145507",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5299"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.185656",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5294"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.228924",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5283"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.269494",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5297"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.318572",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5282"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.359423",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5286"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.401631",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5288"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.445508",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5281"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.488122",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5289"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.524427",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5284"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.568467",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5280"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.608979",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5287"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.653243",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5290"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.694230",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5293"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.737468",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5295"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.777808",
+    "level": "info",
+    "message": "Транслитерация: _mockup.png → mockup.png",
+    "article": "5296"
+  },
+  {
+    "ts": "2026-05-19T19:25:19.779868",
+    "level": "info",
+    "message": "Распаковка завершена. Артикулов: 20, изображений: 40"
+  },
+  {
+    "ts": "2026-05-19T19:25:31.555176",
+    "level": "info",
+    "message": "Превью сгенерированы: 40 шт."
+  },
+  {
+    "ts": "2026-05-19T19:25:31.556001",
+    "level": "info",
+    "message": "Превью созданы"
+  },
+  {
+    "ts": "2026-05-19T19:25:55.894531",
+    "level": "info",
+    "message": "Запуск автораспределения"
+  },
+  {
+    "ts": "2026-05-19T19:25:55.896424",
+    "level": "info",
+    "message": "Автораспределение выполнено"
+  },
+  {
+    "ts": "2026-05-19T19:29:15.425997",
+    "level": "info",
+    "message": "CSV сгенерирован: мозаика 20шт_19-05-2026.csv, строк: 20"
+  },
+  {
+    "ts": "2026-05-19T19:29:16.178025",
+    "level": "info",
+    "message": "CSV сгенерирован: мозаика 20шт_19-05-2026.csv, строк: 20"
+  }
+]

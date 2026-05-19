@@ -1,0 +1,32 @@
+{
+  "id": "ee8c6508-fa5f-4f91-9a6b-8d128f8a4ac9",
+  "name": "интерьерка 20 шт_19-05-2026",
+  "display_name": "интерьерка 20 шт",
+  "created_at": "2026-05-19T19:30:55.797621",
+  "status": "created",
+  "archive_name": null,
+  "archive_size": null,
+  "archive_path": null,
+  "articles": {},
+  "distribution_rules": {
+    "main": {
+      "rule": "first_file",
+      "text": "",
+      "extension": ""
+    },
+    "zoom": {
+      "rule": "contains_text",
+      "text": "Вид картины",
+      "extension": ""
+    }
+  },
+  "stats": {
+    "total_articles": 0,
+    "total_images": 0,
+    "total_errors": 0,
+    "total_warnings": 0
+  },
+  "csv_path": null,
+  "csv_filename": null,
+  "csv_generated_at": null
+}

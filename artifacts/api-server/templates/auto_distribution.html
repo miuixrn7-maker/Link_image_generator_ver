@@ -166,13 +166,21 @@
 
   <!-- Right: logs -->
   <div class="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm">
+    {% set error_count = log_entries | selectattr('level', 'equalto', 'error') | list | length %}
+    {% set warning_count = log_entries | selectattr('level', 'equalto', 'warning') | list | length %}
     <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
       <h3 class="font-semibold text-gray-800 text-sm">Логи</h3>
       <div class="flex items-center gap-2">
         <div class="flex border border-gray-200 rounded-lg overflow-hidden text-xs">
           <button onclick="filterLog('all')" class="log-filter-btn active px-3 py-1.5" data-filter="all">Все</button>
-          <button onclick="filterLog('error')" class="log-filter-btn px-3 py-1.5" data-filter="error">Ошибки</button>
-          <button onclick="filterLog('warning')" class="log-filter-btn px-3 py-1.5" data-filter="warning">Предупреждения</button>
+          <button onclick="filterLog('error')" class="log-filter-btn px-3 py-1.5 flex items-center gap-1" data-filter="error">
+            Ошибки
+            {% if error_count %}<span class="bg-red-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none">{{ error_count }}</span>{% endif %}
+          </button>
+          <button onclick="filterLog('warning')" class="log-filter-btn px-3 py-1.5 flex items-center gap-1" data-filter="warning">
+            Предупреждения
+            {% if warning_count %}<span class="bg-yellow-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none">{{ warning_count }}</span>{% endif %}
+          </button>
         </div>
         <a href="/logs?batch_id={{ batch.id }}" class="text-xs text-gray-500 hover:underline">Полный лог</a>
         <a href="/batch/{{ batch.id }}/download-log" class="text-xs text-blue-600 hover:underline">Скачать лог</a>

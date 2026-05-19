@@ -3,7 +3,7 @@
   "name": "картины проверка дубли_19-05-2026",
   "display_name": "картины проверка дубли",
   "created_at": "2026-05-19T19:19:33.899349",
-  "status": "extracted",
+  "status": "distributed",
   "archive_name": "картины_дубльартикул_дубльфайлы.zip",
   "archive_size": 242750614,
   "archive_path": "/home/runner/workspace/artifacts/api-server/data/uploads/3d8e416b-4e60-4b06-8792-1e6ea025420e.zip",
@@ -41,8 +41,8 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
+        "main": "4669.jpg",
+        "zoom": "Vid_kartiny.png",
         "rest": []
       }
     },
@@ -79,8 +79,8 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
+        "main": "4670.jpg",
+        "zoom": "Vid_kartiny.png",
         "rest": []
       }
     },
@@ -117,8 +117,8 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
+        "main": "4668.jpg",
+        "zoom": "Vid_kartiny.png",
         "rest": []
       }
     },
@@ -155,8 +155,8 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
+        "main": "4666.jpg",
+        "zoom": "Vid_kartiny.png",
         "rest": []
       }
     },
@@ -193,8 +193,8 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
+        "main": "4665.jpg",
+        "zoom": "Vid_kartiny.png",
         "rest": []
       }
     },
@@ -223,7 +223,7 @@
         }
       ],
       "assignment": {
-        "main": null,
+        "main": "fzqv0ra1zdrmr0cy7get4sm4b8_result_0.png",
         "zoom": null,
         "rest": []
       }
@@ -261,8 +261,8 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
+        "main": "4673.jpg",
+        "zoom": "Vid_kartiny.png",
         "rest": []
       }
     },
@@ -299,8 +299,8 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
+        "main": "4672.jpg",
+        "zoom": "Vid_kartiny.png",
         "rest": []
       }
     },
@@ -337,8 +337,8 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
+        "main": "4664.jpg",
+        "zoom": "Vid_kartiny.png",
         "rest": []
       }
     },
@@ -375,8 +375,8 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
+        "main": "4664.jpg",
+        "zoom": "Vid_kartiny.png",
         "rest": []
       }
     },
@@ -413,8 +413,8 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
+        "main": "4671.jpg",
+        "zoom": "Vid_kartiny.png",
         "rest": []
       }
     },
@@ -451,8 +451,8 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
+        "main": "4667.jpg",
+        "zoom": "Vid_kartiny.png",
         "rest": []
       }
     }
@@ -467,7 +467,8 @@
       "rule": "contains_text",
       "text": "Вид картины",
       "extension": ""
-    }
+    },
+    "fallback_enabled": true
   },
   "stats": {
     "total_articles": 12,
@@ -477,5 +478,15 @@
   },
   "csv_path": null,
   "csv_filename": null,
-  "csv_generated_at": null
+  "csv_generated_at": null,
+  "dist_settings": {
+    "main_rule": "first_file",
+    "main_text": "",
+    "main_ext": "",
+    "zoom_rule": "contains_text",
+    "zoom_text": "Вид картины",
+    "zoom_ext": "",
+    "fallback_enabled": true,
+    "selected_preset": "первый_последний"
+  }
 }
