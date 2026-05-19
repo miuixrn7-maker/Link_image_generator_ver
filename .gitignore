@@ -47,3 +47,30 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pythonlibs/
+*.egg-info/
+.eggs/
+*.egg
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Application data — never commit uploads, generated files, or logs
+artifacts/api-server/data/uploads/
+artifacts/api-server/data/batches/
+artifacts/api-server/data/previews/
+artifacts/api-server/data/exports/
+artifacts/api-server/data/logs/
+artifacts/api-server/data/metadata/
