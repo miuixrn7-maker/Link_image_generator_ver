@@ -1,0 +1,167 @@
+Fix article detection and duplicate article logic.
+
+Current bug:
+The app incorrectly splits files that belong to the same article folder into separate article cards.
+
+Example from preview:
+One real article folder should contain:
+4664/
+4664.jpg
+Вид картины.png
+
+But the app displays two separate article cards:
+
+1. Article: 4664, path looks corrupted
+2. Article: 4664, path: картины/
+
+This is wrong.
+
+Required behavior:
+All image files that are directly inside the same article folder must always stay in one article card.
+
+Correct result:
+Article card:
+Артикул: 4664
+Путь: картины/
+Images:
+
+* 4664.jpg
+* Вид картины.png
+
+Do NOT split images from the same source folder into different article entries.
+
+Article detection rule:
+
+1. Scan ZIP recursively.
+2. A folder becomes an article only if it directly contains supported image files.
+3. All supported image files directly inside that folder belong to the same article.
+4. Article name = name of that folder.
+5. Source path = parent path before article folder.
+6. Parent folders are not separate articles unless they directly contain image files.
+7. Do not create separate article entries per file.
+
+Example:
+картины/
+4664/
+4664.jpg
+Вид картины.png
+
+Expected:
+article = 4664
+source_path = картины/
+files = [4664.jpg, Вид картины.png]
+
+Wrong:
+article = 4664 with 4664.jpg
+article = 4664 with Вид картины.png
+
+Duplicate article logic:
+Duplicate articles should be detected only when the same article name appears in different source folders.
+
+Example:
+Категория_A/
+4664/
+photo1.jpg
+
+Категория_B/
+4664/
+photo2.jpg
+
+This is a duplicate article.
+
+Expected:
+Create two separate article cards:
+
+* article: 4664, source_path: Категория_A/
+* article: 4664, source_path: Категория_B/
+
+Do NOT merge them.
+
+But if both files are inside the same folder:
+Категория_A/
+4664/
+photo1.jpg
+photo2.jpg
+
+This is NOT a duplicate article.
+This is one article with two files.
+
+Fix implementation:
+
+1. Group files by full article folder path, not by filename and not only by article name.
+2. Use full article folder path as the primary grouping key.
+3. Use article name only for display and duplicate detection.
+4. Create one article entry per unique article folder path.
+5. For duplicate article names, mark all article entries with that name as duplicates only if their full folder paths are different.
+6. Store:
+
+   * internal_article_id
+   * display_article
+   * source_path
+   * article_folder_path
+   * files[]
+   * has_duplicates
+
+Internal article ID:
+Use a stable unique ID based on full article folder path.
+
+Example:
+internal_article_id = slug(article_name) + "__" + short_hash(article_folder_path)
+
+UI:
+In preview show:
+
+* article name: 4664
+* source path: картины/
+* all images from that folder in the same card
+
+CSV:
+Keep columns unchanged:
+
+* Артикул
+* Путь
+* Главная
+* Увелич_фото
+* Остальные_фото
+
+CSV row:
+Артикул = display_article
+Путь = source_path
+
+Testing:
+Create a test ZIP:
+
+картины/
+4664/
+4664.jpg
+Вид картины.png
+
+Expected:
+Only one article card:
+4664
+Path:
+картины/
+Files:
+2
+
+Then create duplicate article test ZIP:
+
+Категория_A/
+4664/
+photo1.jpg
+
+Категория_B/
+4664/
+photo2.jpg
+
+Expected:
+Two article cards:
+4664 / Категория_A/
+4664 / Категория_B/
+Both marked as duplicate.
+
+Important:
+Do not change CSV format.
+Do not change auto-distribution rules.
+Do not merge duplicate article folders.
+Only fix article grouping logic.

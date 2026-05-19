@@ -18,10 +18,29 @@ from app.metadata import load_metadata, save_metadata
 def _decode_zip_name(info: zipfile.ZipInfo) -> str:
     raw = info.filename
     if info.flag_bits & 0x800:
-        return raw
+        # UTF-8 flag is set, but some ZIP tools set it incorrectly for CP866/CP1251 names.
+        # If the decoded result looks garbled (surrogates or replacement chars) – try to fix.
+        if '\ufffd' not in raw and not is_likely_broken_cyrillic(raw):
+            return raw  # Truly clean UTF-8
+        fixed = fix_zip_filename(raw)
+        return fixed
     if is_likely_broken_cyrillic(raw):
         return fix_zip_filename(raw)
     return raw
+
+
+def _normalize_folder_path(fp: str) -> str:
+    """Fix any garbled segments in a folder path caused by mixed encoding in one ZIP."""
+    if not fp:
+        return fp
+    segments = fp.split("/")
+    result = []
+    for seg in segments:
+        if is_likely_broken_cyrillic(seg) or '\ufffd' in seg or any('\udc80' <= c <= '\udcff' for c in seg):
+            result.append(fix_zip_filename(seg))
+        else:
+            result.append(seg)
+    return "/".join(result)
 
 
 def extract_zip(batch_id: str, zip_path: Path, progress_cb: Optional[Callable] = None) -> dict:
@@ -75,6 +94,17 @@ def extract_zip(batch_id: str, zip_path: Path, progress_cb: Optional[Callable] =
             if folder_path not in folder_files:
                 folder_files[folder_path] = []
             folder_files[folder_path].append((info, decoded_name, filename, ext))
+
+        # Normalize all folder paths to merge entries that differ only due to
+        # mixed encoding in the same ZIP (e.g., one file has UTF-8 flag set for
+        # the same folder where another file does not).
+        normalized_folder_files: dict[str, list] = {}
+        for fp, fp_files in folder_files.items():
+            norm_fp = _normalize_folder_path(fp)
+            if norm_fp not in normalized_folder_files:
+                normalized_folder_files[norm_fp] = []
+            normalized_folder_files[norm_fp].extend(fp_files)
+        folder_files = normalized_folder_files
 
         # All folder paths that directly contain at least one supported image
         image_bearing_paths = {

@@ -41,7 +41,46 @@ def safe_filename(name: str) -> str:
     return stem + ext
 
 
+def is_likely_broken_cyrillic(name: str) -> bool:
+    """Detect strings that contain garbled non-UTF8 text.
+
+    Covers two cases:
+    1. Python decoded bytes as CP437 → chars in \\x80-\\xff range.
+    2. Python decoded bytes as UTF-8 with surrogateescape → surrogate chars
+       in range \\udc80-\\udcff (raw bytes 0x80-0xFF smuggled through).
+    """
+    broken = sum(
+        1 for c in name
+        if ('\x80' <= c <= '\xff') or ('\udc80' <= c <= '\udcff')
+    )
+    return broken > len(name) * 0.3
+
+
 def fix_zip_filename(raw: str) -> str:
+    """Attempt to recover the correct filename from a mis-decoded ZIP entry.
+
+    Handles two origins:
+    A. Python decoded the raw bytes as CP437 (standard ZIP without UTF-8 flag):
+       re-encode as CP437 to recover bytes, then try CP866 / CP1251.
+    B. Python decoded the raw bytes as UTF-8 with surrogateescape (UTF-8 flag
+       set, but bytes were actually CP866/CP1251):
+       recover raw bytes via surrogateescape, then decode as CP866 / CP1251.
+    """
+    # Case B: surrogate characters present → recover raw bytes via surrogateescape
+    if any('\udc80' <= c <= '\udcff' for c in raw):
+        try:
+            raw_bytes = raw.encode('utf-8', 'surrogateescape')
+            for enc in ('cp866', 'cp1251'):
+                try:
+                    fixed = raw_bytes.decode(enc)
+                    if any('\u0400' <= c <= '\u04ff' for c in fixed):
+                        return fixed
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+    # Case A: bytes were decoded as CP437 → re-encode to recover original bytes
     for from_enc, to_enc in [('cp437', 'cp866'), ('cp437', 'cp1251'), ('cp437', 'utf-8')]:
         try:
             fixed = raw.encode(from_enc).decode(to_enc)
@@ -49,12 +88,8 @@ def fix_zip_filename(raw: str) -> str:
                 return fixed
         except Exception:
             pass
+
     return raw
-
-
-def is_likely_broken_cyrillic(name: str) -> bool:
-    broken_chars = sum(1 for c in name if '\x80' <= c <= '\xff')
-    return broken_chars > len(name) * 0.3
 
 
 def make_unique_filename(base_name: str, existing: set) -> str:
