@@ -15,7 +15,7 @@
       </button>
     </div>
     {% if batch.archive_name %}
-    <span class="text-xs text-gray-400">{{ batch.archive_name }} ({{ (batch.archive_size / 1048576)|round(2) }} МБ)</span>
+    <span class="text-xs text-gray-400">{{ batch.archive_name }}{% if batch.archive_size %} ({{ (batch.archive_size / 1048576)|round(2) }} МБ){% endif %}</span>
     {% endif %}
 
     <div class="flex-1"></div>
@@ -150,6 +150,15 @@ function fmtSize(bytes) {
 
 function renderAll() {
   if (!batchMeta) return;
+  // Save collapse state before re-render
+  const collapsedArticles = new Set();
+  document.querySelectorAll('.article-card').forEach(card => {
+    const body = card.querySelector('.article-body');
+    if (body && body.classList.contains('hidden')) {
+      collapsedArticles.add(card.dataset.article);
+    }
+  });
+
   const container = document.getElementById('articles-container');
   container.innerHTML = '';
   const articles = batchMeta.articles || {};
@@ -158,6 +167,16 @@ function renderAll() {
     const el = renderArticle(name, articles[name]);
     container.appendChild(el);
   }
+
+  // Restore collapse state
+  collapsedArticles.forEach(name => {
+    const card = document.querySelector(`.article-card[data-article="${CSS.escape(name)}"]`);
+    if (card) {
+      card.querySelector('.article-body')?.classList.add('hidden');
+      card.querySelector('.article-chevron')?.classList.remove('rotate-180');
+    }
+  });
+
   applyFilters();
   applyThumbSize(thumbSize);
 }
@@ -299,46 +318,66 @@ function onDrop(e) {
   const destCol = destZone.dataset.col;
 
   if (!batchMeta) return;
-  const srcArticle = batchMeta.articles[dragSrc.article];
+  const srcArticleData = batchMeta.articles[dragSrc.article];
   const destArticleData = batchMeta.articles[destArticle];
-  if (!srcArticle || !destArticleData) return;
+  if (!srcArticleData || !destArticleData) return;
 
   const fileName = dragSrc.file;
   const srcCol = dragSrc.col;
+  const srcAssignment = srcArticleData.assignment;
+  const destAssignment = destArticleData.assignment;
+
+  // No-op: same non-rest slot
+  if (dragSrc.article === destArticle && srcCol === destCol && destCol !== 'rest') {
+    dragSrc = null;
+    return;
+  }
 
   // Remove from source
-  const srcAssignment = srcArticle.assignment;
   if (srcCol === 'main') srcAssignment.main = null;
   else if (srcCol === 'zoom') srcAssignment.zoom = null;
-  else if (srcCol === 'rest') srcAssignment.rest = srcAssignment.rest.filter(f => f !== fileName);
+  else if (srcCol === 'rest') srcAssignment.rest = (srcAssignment.rest || []).filter(f => f !== fileName);
 
-  // Add to dest (same article only for cross-col, inter-article not supported for simplicity)
-  const destAssignment = destArticleData.assignment;
+  // Add to destination
   if (destCol === 'main') {
-    // If dest main occupied, push back to rest of same article
-    if (destAssignment.main && destAssignment.main !== fileName) {
-      if (destArticle === dragSrc.article) {
-        srcAssignment.rest = srcAssignment.rest || [];
-        srcAssignment.rest.unshift(destAssignment.main);
-      }
+    const displaced = destAssignment.main;
+    if (displaced && displaced !== fileName) {
+      // Return displaced image to its own article's rest
+      destAssignment.rest = destAssignment.rest || [];
+      if (!destAssignment.rest.includes(displaced)) destAssignment.rest.push(displaced);
     }
     destAssignment.main = fileName;
   } else if (destCol === 'zoom') {
-    if (destAssignment.zoom && destAssignment.zoom !== fileName) {
-      if (destArticle === dragSrc.article) {
-        srcAssignment.rest = srcAssignment.rest || [];
-        srcAssignment.rest.unshift(destAssignment.zoom);
-      }
+    const displaced = destAssignment.zoom;
+    if (displaced && displaced !== fileName) {
+      destAssignment.rest = destAssignment.rest || [];
+      if (!destAssignment.rest.includes(displaced)) destAssignment.rest.push(displaced);
     }
     destAssignment.zoom = fileName;
   } else if (destCol === 'rest') {
     if (!destAssignment.rest) destAssignment.rest = [];
-    if (!destAssignment.rest.includes(fileName)) destAssignment.rest.push(fileName);
+    const insertIdx = _findDropIndex(destZone, fileName, destAssignment.rest, e.clientX);
+    destAssignment.rest = destAssignment.rest.filter(f => f !== fileName);
+    destAssignment.rest.splice(insertIdx, 0, fileName);
   }
 
   dragSrc = null;
   renderAll();
   scheduleSave();
+}
+
+function _findDropIndex(zone, fileName, restList, clientX) {
+  const thumbs = zone.querySelectorAll('.thumb-card');
+  for (let i = 0; i < thumbs.length; i++) {
+    const tFile = thumbs[i].dataset.file;
+    if (tFile === fileName) continue;
+    const rect = thumbs[i].getBoundingClientRect();
+    if (clientX < rect.left + rect.width / 2) {
+      const idx = restList.indexOf(tFile);
+      return idx >= 0 ? idx : i;
+    }
+  }
+  return restList.filter(f => f !== fileName).length;
 }
 
 function scheduleSave() {

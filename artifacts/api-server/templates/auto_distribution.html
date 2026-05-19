@@ -73,6 +73,7 @@
           <button onclick="filterLog('error')" class="log-filter-btn px-3 py-1.5" data-filter="error">Ошибки</button>
           <button onclick="filterLog('warning')" class="log-filter-btn px-3 py-1.5" data-filter="warning">Предупреждения</button>
         </div>
+        <a href="/logs?batch_id={{ batch.id }}" class="text-xs text-gray-500 hover:underline">Полный лог</a>
         <a href="/batch/{{ batch.id }}/download-log" class="text-xs text-blue-600 hover:underline">Скачать лог</a>
       </div>
     </div>

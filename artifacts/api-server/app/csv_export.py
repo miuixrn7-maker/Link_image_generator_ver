@@ -1,5 +1,6 @@
 import csv
 import io
+import os
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote
@@ -8,6 +9,19 @@ from app.config import EXPORTS_DIR, BASE_URL
 from app.metadata import load_metadata, save_metadata
 from app.logger_utils import log_event
 from app.preview_gen import get_image_path
+
+
+def _resolve_base_url(base_url: str) -> str:
+    if base_url:
+        return base_url.rstrip('/')
+    domains = os.environ.get("REPLIT_DOMAINS", "")
+    if domains:
+        first = domains.split(",")[0].strip()
+        return f"https://{first}"
+    dev = os.environ.get("REPLIT_DEV_DOMAIN", "")
+    if dev:
+        return f"https://{dev}"
+    return ""
 
 
 def build_image_url(batch_id: str, article: str, safe_name: str, base_url: str) -> str:
@@ -25,6 +39,8 @@ def generate_csv(batch_id: str, base_url: str) -> dict:
     csv_filename = f"{batch_name}.csv"
     csv_path = EXPORTS_DIR / csv_filename
 
+    resolved_base = _resolve_base_url(base_url)
+
     output = io.StringIO()
     writer = csv.writer(output, delimiter=';', quoting=csv.QUOTE_ALL)
     writer.writerow(["Артикул", "Путь", "Главная", "Увелич_фото", "Остальные_фото"])
@@ -37,12 +53,12 @@ def generate_csv(batch_id: str, base_url: str) -> dict:
 
         main_file = assignment.get("main")
         zoom_file = assignment.get("zoom")
-        rest_files = assignment.get("rest", [])
+        rest_files = list(dict.fromkeys(f for f in assignment.get("rest", []) if f))
 
-        main_url = build_image_url(batch_id, article_name, main_file, base_url) if main_file else ""
-        zoom_url = build_image_url(batch_id, article_name, zoom_file, base_url) if zoom_file else ""
+        main_url = build_image_url(batch_id, article_name, main_file, resolved_base) if main_file else ""
+        zoom_url = build_image_url(batch_id, article_name, zoom_file, resolved_base) if zoom_file else ""
         rest_urls = ";".join(
-            build_image_url(batch_id, article_name, f, base_url) for f in rest_files
+            build_image_url(batch_id, article_name, f, resolved_base) for f in rest_files
         )
 
         writer.writerow([article_name, path_str, main_url, zoom_url, rest_urls])

@@ -123,10 +123,15 @@ def extract_zip(batch_id: str, zip_path: Path, progress_cb: Optional[Callable] =
 
             for folder_path, files in folder_list:
                 for info, decoded_name, filename, ext in files:
-                    # Check nested subfolders (warn if folder contains subfolder with images)
-                    parts = decoded_name.replace('\\', '/').split('/')
-                    if len(parts) > (decoded_name.count('/') if folder_path else 1) + 1:
-                        pass  # nested folder inside article
+                    # Check nested subfolders (warn if file is not directly in article folder)
+                    file_parts = decoded_name.replace('\\', '/').split('/')
+                    folder_components = len(folder_path.split('/')) if folder_path else 0
+                    if len(file_parts) > folder_components + 1:
+                        nested_sub = '/'.join(file_parts[folder_components:-1])
+                        warn_msg = f"Изображение во вложенной подпапке «{nested_sub}» — добавлено в артикул"
+                        if warn_msg not in warnings:
+                            warnings.append(warn_msg)
+                            log_event(batch_id, "warning", warn_msg, article=article_name)
 
                     if ext not in SUPPORTED_IMAGES:
                         errors.append(f"Неподдерживаемый формат файла: {filename}")
@@ -187,7 +192,7 @@ def extract_zip(batch_id: str, zip_path: Path, progress_cb: Optional[Callable] =
                         log_event(batch_id, "error", f"Ошибка открытия изображения: {s_name}", article=article_name)
 
                     if s_name != original_s_name:
-                        log_event(batch_id, "info", f"Транслитерация: {filename} → {s_name}", article=article_name)
+                        log_event(batch_id, "info", f"Переименовано из-за конфликта имён: {original_s_name} → {s_name}", article=article_name)
                     elif safe_filename(filename) != filename:
                         log_event(batch_id, "info", f"Транслитерация: {filename} → {s_name}", article=article_name)
 

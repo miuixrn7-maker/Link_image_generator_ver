@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 
-from app.auth import is_authenticated, current_user
+from app.auth import is_authenticated, require_auth, current_user
 from app.metadata import save_metadata, load_metadata
 
 templates = Jinja2Templates(directory=str(Path(__file__).parent.parent.parent / "templates"))
@@ -61,3 +61,12 @@ async def create_batch(request: Request, batch_name: str = Form(...)):
     }
     save_metadata(batch_id, meta)
     return RedirectResponse(url=f"/batch/{batch_id}/upload", status_code=302)
+
+
+@router.get("/settings", response_class=HTMLResponse)
+async def settings_page(request: Request):
+    if not is_authenticated(request):
+        return RedirectResponse(url="/login", status_code=302)
+    return templates.TemplateResponse(request, "settings.html", {
+        "user": current_user(request),
+    })

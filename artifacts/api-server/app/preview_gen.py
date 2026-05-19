@@ -63,12 +63,15 @@ def get_preview_url_name(safe_name: str) -> str:
 
 
 def generate_all_previews(batch_id: str, articles: dict, log: bool = True):
+    count = 0
     for article_name, article in articles.items():
         for file_info in article.get("files", []):
             s_name = file_info["safe_name"]
             ok = generate_preview(batch_id, article_name, s_name)
-            if log and ok:
-                pass  # log_event(batch_id, "info", f"Превью создано: {s_name}", article=article_name)
+            if ok:
+                count += 1
+    if log and count > 0:
+        log_event(batch_id, "info", f"Превью сгенерированы: {count} шт.")
 
 
 def cleanup_old_previews():

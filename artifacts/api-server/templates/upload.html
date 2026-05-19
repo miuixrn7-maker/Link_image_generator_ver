@@ -77,7 +77,7 @@
     </div>
   </div>
 
-  {% if batch.status == 'uploaded' %}
+  {% if batch.archive_name %}
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       showAfterUpload('{{ batch.archive_name }}', {{ batch.archive_size or 0 }});
