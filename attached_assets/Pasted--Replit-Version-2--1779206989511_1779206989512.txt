@@ -1,0 +1,526 @@
+Ниже ТЗ для Replit по **Version 2** с учетом твоей финальной логики: настройки, пресеты автораспределения и дубликаты артикулов без объединения.
+
+Implement Version 2 for the current project.
+
+Goal:
+Add practical settings and auto-distribution presets while keeping the existing Version 1 workflow stable.
+
+Do NOT rewrite the project from scratch.
+Do NOT redesign the app.
+Do NOT change CSV format except adding/using the “Путь” column if it is not already used correctly.
+Do NOT add WB/Ozon export.
+Do NOT add user management.
+Do NOT add image resizing.
+Do NOT add CSV link checker.
+Do NOT add duplicate filename handling logic.
+
+Current Version 1 workflow must remain stable:
+ZIP upload
+→ extraction
+→ auto-distribution
+→ preview
+→ manual corrections
+→ CSV export
+→ history / deletion
+
+UI language:
+Russian.
+
+Code, routes, variable names:
+English.
+
+VERSION 2 FEATURES
+
+Add only:
+
+1. Global settings page
+
+2. Auto-distribution presets
+
+3. Preset selection on auto-distribution page
+
+4. Russian tooltips for settings
+
+5. Updated duplicate article behavior:
+   duplicate articles are NOT merged
+
+6. GLOBAL SETTINGS PAGE
+
+Use existing sidebar item:
+“Настройки”
+
+Replace placeholder settings page with real settings.
+
+Settings must be stored in:
+metadata/settings.json
+
+If settings.json does not exist, create it automatically with defaults.
+
+Settings page sections:
+
+A. Storage settings
+
+1. Auto-delete batches
+
+Russian label:
+“Автоудаление партий”
+
+Options:
+
+* 7 дней
+* 14 дней
+* 30 дней
+* Никогда
+
+Default:
+14 дней
+
+Tooltip:
+“Через сколько дней партия будет автоматически удалена вместе с файлами, CSV и логами.”
+
+This setting must control existing batch auto-cleanup logic.
+
+If value is “Никогда”:
+do not auto-delete batches.
+
+2. Auto-delete previews
+
+Russian label:
+“Автоудаление превью”
+
+Options:
+
+* 24 часа
+* 48 часов
+* Никогда
+
+Default:
+24 часа
+
+Tooltip:
+“Через сколько времени удаляются уменьшенные превью изображений. Оригиналы и CSV не удаляются.”
+
+This setting must control existing preview cleanup logic.
+
+If value is “Никогда”:
+do not auto-delete previews.
+
+B. Duplicate article settings
+
+1. Duplicate articles behavior
+
+Russian label:
+“Одинаковые артикулы”
+
+Options:
+
+* “Не объединять, показать предупреждение”
+* “Считать ошибкой”
+
+Default:
+“Не объединять, показать предупреждение”
+
+Tooltip:
+“Что делать, если одинаковый артикул найден в нескольких папках архива.”
+
+Important:
+Do NOT add duplicate filename settings.
+Duplicate filename handling is not needed in Version 2.
+
+2. DUPLICATE ARTICLE BEHAVIOR
+
+Current required default behavior:
+Duplicate articles must NOT be merged.
+
+Example:
+Категория_A/4664/photo1.jpg
+Категория_B/4664/photo2.jpg
+
+Both folders have article:
+4664
+
+Expected behavior:
+
+1. Create two separate article entries.
+2. Do not mix files from different folders.
+3. Do not merge image lists.
+4. Do not overwrite files.
+5. Both visible article names remain:
+   4664
+6. Store source path for each article.
+7. Show warning on each duplicated article:
+   “Дубликат артикула — найдено несколько папок с таким названием”
+8. Preview filter “Только с дубликатами” must show these articles.
+9. CSV may contain duplicate rows in column:
+   “Артикул”
+10. CSV column “Путь” must distinguish duplicate article rows.
+
+Internal implementation:
+Use unique internal article ID to avoid collisions.
+
+Suggested internal fields:
+
+* article_id = article_name + "__" + short_hash_of_source_path
+* display_article = article_name
+* source_path = original parent folder path
+* article_folder = original article folder path
+* has_duplicates = true / false
+
+UI display in Preview:
+Show:
+
+* Артикул: 4664
+* Путь: Категория_A/
+
+If duplicate:
+show yellow warning:
+“Дубликат артикула — найдено несколько папок с таким названием”
+
+CSV:
+Column “Артикул” should contain real article value:
+4664
+
+Column “Путь” should contain source path:
+Категория_A/
+
+If setting is “Считать ошибкой”:
+
+1. Detect duplicate article names during extraction.
+
+2. Stop before auto-distribution.
+
+3. Do not open preview.
+
+4. Show readable error:
+   “В архиве найдены дубли артикулов. Переименуйте папки или измените настройку обработки дублей.”
+
+5. List duplicated article names and paths.
+
+6. Batch status should become:
+   “ошибка”
+
+7. Add detailed log entry.
+
+8. AUTO-DISTRIBUTION PRESETS
+
+Presets affect ONLY auto-distribution rules:
+
+* Главная
+* Увелич_фото
+
+Presets must NOT affect:
+
+* CSV format
+* duplicate article behavior
+* cleanup settings
+* preview settings
+* users
+* logs
+* exports
+
+Store presets in:
+metadata/presets.json
+
+If presets.json does not exist, create it automatically with default presets.
+
+Preset fields:
+
+* preset_name
+* main_rule
+* main_search_text
+* zoom_rule
+* zoom_search_text
+* fallback_enabled
+
+Supported rules:
+
+* first file
+* last file
+* filename contains text
+* file extension
+* no auto-distribution
+
+Russian labels:
+
+* Первый файл
+* Последний файл
+* Имя содержит текст
+* Расширение файла
+* Без автораспределения
+
+Default presets:
+
+1. “Картины”
+
+* Главная = first file
+* Увелич_фото = filename contains text
+* zoom_search_text = “Вид картины”
+* fallback_enabled = true
+
+2. “Мозаика”
+
+* Главная = first file
+* Увелич_фото = last file
+* fallback_enabled = true
+
+3. “Интерьерка”
+
+* Главная = first file
+* Увелич_фото = no auto-distribution
+* fallback_enabled = false
+
+4. PRESET UI ON AUTO-DISTRIBUTION PAGE
+
+Add preset block on the auto-distribution page.
+
+UI elements:
+
+* dropdown:
+  “Выбрать пресет”
+* button:
+  “Применить пресет”
+* button:
+  “Сохранить текущие правила как пресет”
+* button:
+  “Удалить пресет”
+
+Behavior:
+
+1. User opens auto-distribution page after extraction.
+2. User selects preset.
+3. User clicks:
+   “Применить пресет”
+4. Preset fills:
+
+   * rule for Главная
+   * search text for Главная if needed
+   * rule for Увелич_фото
+   * search text for Увелич_фото if needed
+   * fallback option
+5. User can manually edit rules before clicking:
+   “Запустить автораспределение”
+6. Applying a preset must NOT run auto-distribution automatically.
+7. Applying a preset only changes form values.
+
+Save preset behavior:
+
+1. User adjusts current rules.
+2. User clicks:
+   “Сохранить текущие правила как пресет”
+3. Show modal:
+   “Название пресета”
+4. Save current auto-distribution form values into presets.json.
+5. If preset name already exists, ask confirmation:
+   “Пресет с таким названием уже существует. Перезаписать?”
+6. Show success message:
+   “Пресет сохранён”
+
+Delete preset behavior:
+
+1. User selects preset.
+
+2. User clicks:
+   “Удалить пресет”
+
+3. Show confirmation:
+   “Удалить выбранный пресет?”
+
+4. Delete from presets.json.
+
+5. Do not allow deleting the last remaining preset.
+
+6. Show success message:
+   “Пресет удалён”
+
+7. LOCAL BATCH AUTO-DISTRIBUTION SETTINGS
+
+For Version 2, local batch settings are limited to auto-distribution values used for that batch.
+
+Store selected/current auto-distribution settings in batch metadata:
+
+* selected_preset_name
+* main_rule
+* main_search_text
+* zoom_rule
+* zoom_search_text
+* fallback_enabled
+
+Behavior:
+
+1. If user returns to auto-distribution page, restore last selected/current rules for that batch.
+
+2. If user changes rules only for this batch, do NOT update global presets automatically.
+
+3. Preset changes only when user explicitly clicks:
+   “Сохранить текущие правила как пресет”
+
+4. TOOLTIP / HELP TEXT
+
+Add Russian hover tooltips for settings and preset fields.
+
+Behavior:
+
+* show tooltip on hover over label or small “?” icon
+* tooltip must be short and clear
+* dark tooltip background
+* white text
+* fast appearance
+* mobile-friendly if possible
+
+Tooltips:
+
+“Автоудаление партий”
+→ “Через сколько дней партия будет удалена вместе с файлами, CSV и логами.”
+
+“Автоудаление превью”
+→ “Удаляет только уменьшенные изображения для интерфейса. Оригиналы остаются.”
+
+“Одинаковые артикулы”
+→ “Что делать, если один и тот же артикул найден в разных папках архива.”
+
+“Главная”
+→ “Как автоматически выбирать главное изображение.”
+
+“Увелич_фото”
+→ “Как автоматически выбирать изображение для колонки Увелич_фото.”
+
+“Имя содержит текст”
+→ “Выбирает файл, если его имя содержит указанный текст.”
+
+“Расширение файла”
+→ “Выбирает файл по формату изображения, например .jpg, .png или .webp.”
+
+“Fallback для Увелич_фото”
+→ “Если после выбора Главной осталось одно изображение, оно автоматически попадёт в Увелич_фото.”
+
+7. SETTINGS APPLICATION
+
+Global settings must affect real behavior:
+
+Auto-delete batches:
+
+* read value from settings.json
+* if “Никогда”, do not auto-delete batches
+
+Auto-delete previews:
+
+* read value from settings.json
+* if “Никогда”, do not delete previews automatically
+
+Duplicate articles:
+
+* read behavior from settings.json during extraction
+* default:
+  do not merge, show warning
+
+No duplicate filename behavior setting:
+
+* do not implement
+* do not add UI for it
+* do not add warnings for it
+* do not add extra logic for it
+
+8. UI REQUIREMENTS
+
+Settings page:
+
+* white/light design
+* same style as existing app
+* compact form sections
+* save button:
+  “Сохранить настройки”
+* reset button:
+  “Сбросить по умолчанию”
+
+After save show:
+“Настройки сохранены”
+
+After reset show:
+“Настройки сброшены”
+
+Auto-distribution page:
+
+* preset block should not overload layout
+* place it above or near existing rule controls
+* keep right-side logs panel
+* keep current layout style
+
+9. MIGRATION / BACKWARD COMPATIBILITY
+
+Existing batches must continue to work.
+
+Requirements:
+
+1. If settings.json does not exist, create it with defaults.
+
+2. If presets.json does not exist, create default presets.
+
+3. Existing batch metadata without preset fields must still open normally.
+
+4. Existing batches created before duplicate-article changes should still open.
+
+5. Do not corrupt old metadata.
+
+6. Do not change CSV column structure.
+
+7. TESTING
+
+After implementation, test:
+
+Settings:
+
+* open settings page
+* save settings
+* reset settings
+* reload app and verify settings persist
+* auto-delete batches reads setting
+* preview cleanup reads setting
+
+Presets:
+
+* default presets created
+* apply “Картины”
+* apply “Мозаика”
+* apply “Интерьерка”
+* save new preset
+* overwrite preset
+* delete preset
+* cannot delete last preset
+* selected/current rules restore after page reload
+
+Duplicate articles:
+
+* duplicate articles are NOT merged by default
+* separate cards appear in Preview
+* each duplicate card shows warning
+* each duplicate card shows correct path
+* filter “Только с дубликатами” works
+* CSV has separate rows
+* CSV column “Артикул” keeps real article value
+* CSV column “Путь” distinguishes rows
+* setting “Считать ошибкой” blocks processing and shows readable error
+
+Regression:
+
+* ZIP upload still works
+* extraction still works
+* auto-distribution still works
+* preview still works
+* drag-and-drop still works
+* image replacement still works
+* file rename still works
+* batch rename still works
+* CSV export format unchanged
+* batch deletion still works
+
+11. FINAL REPORT
+
+After implementation, respond in Russian with:
+
+* what was added
+* what files were changed
+* how settings are stored
+* how presets work
+* how duplicate articles now work
+* what was tested
+* any known risks

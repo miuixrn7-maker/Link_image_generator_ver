@@ -4,7 +4,7 @@ from pathlib import Path
 
 from app.config import (
     UPLOADS_DIR, BATCHES_DIR, PREVIEWS_DIR, EXPORTS_DIR,
-    LOGS_DIR, METADATA_DIR, BATCH_EXPIRE_DAYS
+    LOGS_DIR, METADATA_DIR,
 )
 from app.metadata import load_metadata, save_metadata, list_all_batches, delete_metadata
 from app.logger_utils import delete_log, log_event
@@ -50,9 +50,17 @@ def delete_batch(batch_id: str) -> dict:
 
 
 def auto_cleanup():
-    """Delete batches older than BATCH_EXPIRE_DAYS and old previews."""
+    """Delete batches older than configured expire days and clean old previews."""
     cleanup_old_previews()
-    cutoff = datetime.utcnow() - timedelta(days=BATCH_EXPIRE_DAYS)
+    expire_days = None
+    try:
+        from app.settings_manager import get_setting
+        expire_days = get_setting("batch_expire_days")
+    except Exception:
+        expire_days = 14
+    if expire_days is None:
+        return 0
+    cutoff = datetime.utcnow() - timedelta(days=int(expire_days))
     batches = list_all_batches()
     deleted = 0
     for batch in batches:

@@ -46,22 +46,26 @@ def generate_csv(batch_id: str, base_url: str) -> dict:
     writer.writerow(["Артикул", "Путь", "Главная", "Увелич_фото", "Остальные_фото"])
 
     rows_written = 0
-    for article_name, article in sorted(articles.items()):
+    for article_id, article in sorted(articles.items()):
         assignment = article.get("assignment", {})
-        source_folders = article.get("source_folders", [])
-        path_str = "; ".join(source_folders) if source_folders else ""
+        display_article = article.get("display_article", article_id)
+        # "Путь" column: use source_path (V2) or fall back to source_folders (V1 batches)
+        source_path = article.get("source_path")
+        if source_path is None:
+            source_folders = article.get("source_folders", [])
+            source_path = "; ".join(source_folders) if source_folders else ""
 
         main_file = assignment.get("main")
         zoom_file = assignment.get("zoom")
         rest_files = list(dict.fromkeys(f for f in assignment.get("rest", []) if f))
 
-        main_url = build_image_url(batch_id, article_name, main_file, resolved_base) if main_file else ""
-        zoom_url = build_image_url(batch_id, article_name, zoom_file, resolved_base) if zoom_file else ""
+        main_url = build_image_url(batch_id, article_id, main_file, resolved_base) if main_file else ""
+        zoom_url = build_image_url(batch_id, article_id, zoom_file, resolved_base) if zoom_file else ""
         rest_urls = ";".join(
-            build_image_url(batch_id, article_name, f, resolved_base) for f in rest_files
+            build_image_url(batch_id, article_id, f, resolved_base) for f in rest_files
         )
 
-        writer.writerow([article_name, path_str, main_url, zoom_url, rest_urls])
+        writer.writerow([display_article, source_path, main_url, zoom_url, rest_urls])
         rows_written += 1
 
     csv_content = '\ufeff' + output.getvalue()

@@ -2,14 +2,127 @@
 {% block title %}Настройки{% endblock %}
 {% block page_title %}Настройки{% endblock %}
 {% block content %}
-<div class="max-w-xl mx-auto">
-  <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-10 text-center">
-    <svg class="mx-auto mb-4 text-gray-300" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <circle cx="12" cy="12" r="3"/>
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-    </svg>
-    <h2 class="text-gray-600 font-semibold text-base mb-2">Настройки</h2>
-    <p class="text-sm text-gray-400">Настройки будут добавлены в следующей версии.</p>
+<style>
+  .tooltip-wrap { position: relative; display: inline-flex; align-items: center; gap: 4px; }
+  .tooltip-wrap .tip {
+    position: absolute; left: 0; bottom: calc(100% + 6px);
+    background: #1f2937; color: #fff; font-size: 11px; line-height: 1.4;
+    padding: 5px 8px; border-radius: 6px; white-space: normal; max-width: 260px;
+    min-width: 180px; z-index: 50; pointer-events: none;
+    opacity: 0; transition: opacity .12s;
+  }
+  .tooltip-wrap:hover .tip { opacity: 1; }
+  .tip-icon { width: 14px; height: 14px; border-radius: 50%; background: #d1d5db;
+    color: #6b7280; font-size: 10px; font-weight: 700; display: flex;
+    align-items: center; justify-content: center; cursor: default; flex-shrink: 0; }
+</style>
+
+<div class="max-w-xl mx-auto space-y-5">
+
+  {% if saved %}
+  <div class="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl">
+    Настройки сохранены
   </div>
+  {% endif %}
+  {% if reset_done %}
+  <div class="bg-blue-50 border border-blue-200 text-blue-700 text-sm px-4 py-3 rounded-xl">
+    Настройки сброшены до значений по умолчанию
+  </div>
+  {% endif %}
+
+  {% set batch_days_val = settings.batch_expire_days | string if settings.batch_expire_days is not none else "never" %}
+  {% set preview_hours_val = settings.preview_expire_hours | string if settings.preview_expire_hours is not none else "never" %}
+  {% set dup_behavior = settings.duplicate_article_behavior or "warn" %}
+
+  <form method="post" action="/settings/save">
+    <!-- A. Хранилище -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-5">
+      <h2 class="font-semibold text-gray-800 mb-5">Хранилище</h2>
+
+      <div class="mb-5">
+        <div class="tooltip-wrap mb-2">
+          <span class="text-sm font-medium text-gray-700">Автоудаление партий</span>
+          <span class="tip-icon">?</span>
+          <div class="tip">Через сколько дней партия будет удалена вместе с файлами, CSV и логами.</div>
+        </div>
+        <div class="space-y-2 mt-1">
+          {% for val, label in [('7','7 дней'),('14','14 дней'),('30','30 дней'),('never','Никогда')] %}
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <input type="radio" name="batch_expire_days" value="{{ val }}"
+              {% if val == batch_days_val %}checked{% endif %}
+              class="text-blue-600 accent-blue-600"/>
+            {{ label }}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="border-t border-gray-100 pt-5">
+        <div class="tooltip-wrap mb-2">
+          <span class="text-sm font-medium text-gray-700">Автоудаление превью</span>
+          <span class="tip-icon">?</span>
+          <div class="tip">Удаляет только уменьшенные изображения для интерфейса. Оригиналы остаются.</div>
+        </div>
+        <div class="space-y-2 mt-1">
+          {% for val, label in [('24','24 часа'),('48','48 часов'),('never','Никогда')] %}
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <input type="radio" name="preview_expire_hours" value="{{ val }}"
+              {% if val == preview_hours_val %}checked{% endif %}
+              class="text-blue-600 accent-blue-600"/>
+            {{ label }}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- B. Дубликаты артикулов -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-5">
+      <h2 class="font-semibold text-gray-800 mb-5">Дубликаты артикулов</h2>
+
+      <div>
+        <div class="tooltip-wrap mb-2">
+          <span class="text-sm font-medium text-gray-700">Одинаковые артикулы</span>
+          <span class="tip-icon">?</span>
+          <div class="tip">Что делать, если один и тот же артикул найден в разных папках архива.</div>
+        </div>
+        <div class="space-y-2 mt-1">
+          <label class="flex items-start gap-2 text-sm cursor-pointer">
+            <input type="radio" name="duplicate_article_behavior" value="warn"
+              {% if dup_behavior == 'warn' %}checked{% endif %}
+              class="text-blue-600 accent-blue-600 mt-0.5"/>
+            <span>Не объединять, показать предупреждение</span>
+          </label>
+          <label class="flex items-start gap-2 text-sm cursor-pointer">
+            <input type="radio" name="duplicate_article_behavior" value="error"
+              {% if dup_behavior == 'error' %}checked{% endif %}
+              class="text-blue-600 accent-blue-600 mt-0.5"/>
+            <span>Считать ошибкой</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="flex gap-3">
+      <button type="submit"
+        class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
+        Сохранить настройки
+      </button>
+      <button type="button" onclick="resetSettings()"
+        class="border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm px-5 py-2.5 rounded-lg transition-colors">
+        Сбросить по умолчанию
+      </button>
+    </div>
+  </form>
 </div>
+
+<form id="reset-form" method="post" action="/settings/reset" style="display:none;"></form>
+<script>
+function resetSettings() {
+  if (confirm('Сбросить все настройки до значений по умолчанию?')) {
+    document.getElementById('reset-form').submit();
+  }
+}
+</script>
 {% endblock %}

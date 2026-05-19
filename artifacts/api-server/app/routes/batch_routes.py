@@ -63,10 +63,3 @@ async def create_batch(request: Request, batch_name: str = Form(...)):
     return RedirectResponse(url=f"/batch/{batch_id}/upload", status_code=302)
 
 
-@router.get("/settings", response_class=HTMLResponse)
-async def settings_page(request: Request):
-    if not is_authenticated(request):
-        return RedirectResponse(url="/login", status_code=302)
-    return templates.TemplateResponse(request, "settings.html", {
-        "user": current_user(request),
-    })

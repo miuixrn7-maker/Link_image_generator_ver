@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from PIL import Image, UnidentifiedImageError
 
-from app.config import BATCHES_DIR, PREVIEWS_DIR, PREVIEW_MAX_SIDE, PREVIEW_QUALITY, PREVIEW_EXPIRE_HOURS
+from app.config import BATCHES_DIR, PREVIEWS_DIR, PREVIEW_MAX_SIDE, PREVIEW_QUALITY
 from app.logger_utils import log_event
 
 
@@ -77,7 +77,15 @@ def generate_all_previews(batch_id: str, articles: dict, log: bool = True):
 def cleanup_old_previews():
     if not PREVIEWS_DIR.exists():
         return
-    cutoff = datetime.utcnow() - timedelta(hours=PREVIEW_EXPIRE_HOURS)
+    expire_hours = None
+    try:
+        from app.settings_manager import get_setting
+        expire_hours = get_setting("preview_expire_hours")
+    except Exception:
+        expire_hours = 24
+    if expire_hours is None:
+        return
+    cutoff = datetime.utcnow() - timedelta(hours=int(expire_hours))
     for batch_dir in PREVIEWS_DIR.iterdir():
         if not batch_dir.is_dir():
             continue

@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Картины",
+    "main_rule": "first_file",
+    "main_text": "",
+    "main_ext": "",
+    "zoom_rule": "contains_text",
+    "zoom_text": "Вид картины",
+    "zoom_ext": "",
+    "fallback_enabled": true
+  },
+  {
+    "name": "Мозаика",
+    "main_rule": "first_file",
+    "main_text": "",
+    "main_ext": "",
+    "zoom_rule": "last_file",
+    "zoom_text": "",
+    "zoom_ext": "",
+    "fallback_enabled": true
+  },
+  {
+    "name": "Интерьерка",
+    "main_rule": "first_file",
+    "main_text": "",
+    "main_ext": "",
+    "zoom_rule": "no_distribution",
+    "zoom_text": "",
+    "zoom_ext": "",
+    "fallback_enabled": false
+  }
+]

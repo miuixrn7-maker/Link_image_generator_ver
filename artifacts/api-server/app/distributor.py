@@ -75,12 +75,14 @@ def run_auto_distribution(batch_id: str, rules: dict) -> dict:
         rest = [f["safe_name"] for f in files if f["safe_name"] not in used]
 
         # Fallback: if main exists, zoom empty, rest has exactly 1 image
-        if main_file and not zoom_file and len(rest) == 1:
+        fallback_enabled = rules.get("fallback_enabled", True)
+        if fallback_enabled and main_file and not zoom_file and len(rest) == 1:
             zoom_file = rest[0]
             rest = []
+            display_name = article.get("display_article", article_name)
             log_event(batch_id, "info",
                       "Увелич_фото заполнено автоматически по fallback-правилу.",
-                      article=article_name)
+                      article=display_name)
 
         article["assignment"] = {
             "main": main_file,

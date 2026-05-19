@@ -59,6 +59,7 @@
       <option value="all">Все</option>
       <option value="errors">Только с ошибками</option>
       <option value="warnings">Только с предупреждениями</option>
+      <option value="duplicates">Только с дубликатами</option>
       <option value="no-main">Без Главной</option>
       <option value="no-zoom">Без Увелич_фото</option>
       <option value="has-rest">Содержит Остальные_фото</option>
@@ -186,6 +187,7 @@ function renderArticle(articleName, article) {
   div.dataset.article = articleName;
   div.dataset.hasErrors = (article.errors?.length || article.files?.some(f=>f.errors?.length)) ? '1' : '0';
   div.dataset.hasWarnings = article.warnings?.length ? '1' : '0';
+  div.dataset.hasDuplicates = article.has_duplicates ? '1' : '0';
   div.dataset.hasMain = article.assignment?.main ? '1' : '0';
   div.dataset.hasZoom = article.assignment?.zoom ? '1' : '0';
   div.dataset.hasRest = (article.assignment?.rest?.length > 0) ? '1' : '0';
@@ -200,7 +202,8 @@ function renderArticle(articleName, article) {
   div.innerHTML = `
     <div class="article-header flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100 select-none" onclick="toggleArticle('${articleName}')">
       <svg class="article-chevron text-gray-400 transition-transform" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-      <span class="font-medium text-sm text-gray-800">${articleName}</span>
+      <span class="font-medium text-sm text-gray-800">${article.display_article || articleName}</span>
+      ${article.has_duplicates && article.source_path !== undefined ? `<span class="text-xs text-gray-400 font-normal">${article.source_path}/</span>` : ''}
       ${errCount ? `<span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">${errCount} ошибок</span>` : ''}
       ${warnCount ? `<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">${warnCount} предупр.</span>` : ''}
       <div class="flex-1"></div>
@@ -460,7 +463,7 @@ function applyFilters() {
     else if (f === 'warnings') matchFilter = card.dataset.hasWarnings === '1';
     else if (f === 'no-main') matchFilter = card.dataset.hasMain !== '1';
     else if (f === 'no-zoom') matchFilter = card.dataset.hasZoom !== '1';
-    else if (f === 'duplicates') matchFilter = false;
+    else if (f === 'duplicates') matchFilter = card.dataset.hasDuplicates === '1';
     else if (f === 'has-rest') matchFilter = card.dataset.hasRest === '1';
     const show = matchSearch && matchFilter;
     card.classList.toggle('hidden', !show);

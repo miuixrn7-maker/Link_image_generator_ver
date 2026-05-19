@@ -2,6 +2,21 @@
 {% block title %}Автораспределение — {{ batch.name }}{% endblock %}
 {% block page_title %}Автораспределение{% endblock %}
 {% block content %}
+<style>
+  .tooltip-wrap { position: relative; display: inline-flex; align-items: center; gap: 3px; }
+  .tooltip-wrap .tip {
+    position: absolute; left: 0; bottom: calc(100% + 5px);
+    background: #1f2937; color: #fff; font-size: 11px; line-height: 1.4;
+    padding: 5px 8px; border-radius: 6px; white-space: normal; max-width: 220px;
+    min-width: 160px; z-index: 50; pointer-events: none;
+    opacity: 0; transition: opacity .12s;
+  }
+  .tooltip-wrap:hover .tip { opacity: 1; }
+  .tip-icon { width: 13px; height: 13px; border-radius: 50%; background: #e5e7eb;
+    color: #9ca3af; font-size: 9px; font-weight: 700; display: inline-flex;
+    align-items: center; justify-content: center; cursor: default; flex-shrink: 0; }
+</style>
+
 <div class="mb-4 flex items-center gap-3 text-sm text-gray-500">
   <a href="/" class="hover:text-blue-600">Главная</a>
   <span>›</span>
@@ -11,39 +26,121 @@
 <div class="flex gap-5 items-start">
   <!-- Left: settings -->
   <div class="w-80 shrink-0 space-y-4">
+
+    <!-- Presets block -->
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-      <h3 class="font-semibold text-gray-800 mb-4">Правила распределения</h3>
+      <h3 class="font-semibold text-gray-800 text-sm mb-3">Пресеты</h3>
+      <div class="flex gap-2 mb-3">
+        <select id="preset-select" class="flex-1 border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+          {% for p in presets %}
+          <option value="{{ p.name }}" {% if p.name == dist.selected_preset %}selected{% endif %}>{{ p.name }}</option>
+          {% endfor %}
+        </select>
+        <button onclick="applyPreset()"
+          class="text-sm border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+          Применить
+        </button>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="openSaveModal()"
+          class="flex-1 text-xs border border-gray-200 text-gray-600 hover:bg-gray-50 px-2 py-1.5 rounded-lg transition-colors">
+          Сохранить как пресет
+        </button>
+        <button onclick="confirmDeletePreset()"
+          class="text-xs border border-red-100 text-red-500 hover:bg-red-50 px-2 py-1.5 rounded-lg transition-colors">
+          Удалить
+        </button>
+      </div>
+    </div>
+
+    <!-- Rules -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+      <h3 class="font-semibold text-gray-800 mb-4 text-sm">Правила распределения</h3>
 
       <div class="mb-5">
-        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Главная</label>
+        <div class="tooltip-wrap mb-2">
+          <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Главная</label>
+          <span class="tip-icon">?</span>
+          <div class="tip">Как автоматически выбирать главное изображение.</div>
+        </div>
         <div class="space-y-2">
-          {% for val, label in [('first_file','Первый файл'),('last_file','Последний файл'),('contains_text','Содержит текст'),('extension','По расширению'),('no_distribution','Не распределять')] %}
+          {% for val, label in [('first_file','Первый файл'),('last_file','Последний файл'),('contains_text','Имя содержит текст'),('extension','Расширение файла'),('no_distribution','Без автораспределения')] %}
           <label class="flex items-center gap-2 text-sm cursor-pointer">
-            <input type="radio" name="main_rule" value="{{ val }}" {% if val == 'first_file' %}checked{% endif %} class="text-blue-600"/>
+            <input type="radio" name="main_rule" value="{{ val }}"
+              {% if val == dist.main_rule %}checked{% endif %}
+              class="text-blue-600 accent-blue-600"/>
+            {% if val == 'contains_text' %}
+            <div class="tooltip-wrap">
+              <span>{{ label }}</span>
+              <span class="tip-icon">?</span>
+              <div class="tip">Выбирает файл, если его имя содержит указанный текст.</div>
+            </div>
+            {% elif val == 'extension' %}
+            <div class="tooltip-wrap">
+              <span>{{ label }}</span>
+              <span class="tip-icon">?</span>
+              <div class="tip">Выбирает файл по формату изображения, например .jpg, .png или .webp.</div>
+            </div>
+            {% else %}
             {{ label }}
+            {% endif %}
           </label>
           {% endfor %}
         </div>
-        <input type="text" id="main-text" placeholder="Текст для поиска" value=""
+        <input type="text" id="main-text" placeholder="Текст для поиска" value="{{ dist.main_text }}"
           class="mt-2 w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm hidden focus:ring-1 focus:ring-blue-500 outline-none"/>
-        <input type="text" id="main-ext" placeholder="Расширение (jpg, png...)"
+        <input type="text" id="main-ext" placeholder="Расширение (jpg, png...)" value="{{ dist.main_ext }}"
           class="mt-2 w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm hidden focus:ring-1 focus:ring-blue-500 outline-none"/>
       </div>
 
       <div class="mb-5 border-t border-gray-100 pt-4">
-        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Увелич_фото</label>
+        <div class="tooltip-wrap mb-2">
+          <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Увелич_фото</label>
+          <span class="tip-icon">?</span>
+          <div class="tip">Как автоматически выбирать изображение для колонки Увелич_фото.</div>
+        </div>
         <div class="space-y-2">
-          {% for val, label in [('first_file','Первый файл'),('last_file','Последний файл'),('contains_text','Содержит текст'),('extension','По расширению'),('no_distribution','Не распределять')] %}
+          {% for val, label in [('first_file','Первый файл'),('last_file','Последний файл'),('contains_text','Имя содержит текст'),('extension','Расширение файла'),('no_distribution','Без автораспределения')] %}
           <label class="flex items-center gap-2 text-sm cursor-pointer">
-            <input type="radio" name="zoom_rule" value="{{ val }}" {% if val == 'contains_text' %}checked{% endif %} class="text-blue-600"/>
+            <input type="radio" name="zoom_rule" value="{{ val }}"
+              {% if val == dist.zoom_rule %}checked{% endif %}
+              class="text-blue-600 accent-blue-600"/>
+            {% if val == 'contains_text' %}
+            <div class="tooltip-wrap">
+              <span>{{ label }}</span>
+              <span class="tip-icon">?</span>
+              <div class="tip">Выбирает файл, если его имя содержит указанный текст.</div>
+            </div>
+            {% elif val == 'extension' %}
+            <div class="tooltip-wrap">
+              <span>{{ label }}</span>
+              <span class="tip-icon">?</span>
+              <div class="tip">Выбирает файл по формату изображения, например .jpg, .png или .webp.</div>
+            </div>
+            {% else %}
             {{ label }}
+            {% endif %}
           </label>
           {% endfor %}
         </div>
-        <input type="text" id="zoom-text" placeholder="Текст для поиска" value="Вид картины"
+        <input type="text" id="zoom-text" placeholder="Текст для поиска" value="{{ dist.zoom_text }}"
           class="mt-2 w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm focus:ring-1 focus:ring-blue-500 outline-none"/>
-        <input type="text" id="zoom-ext" placeholder="Расширение (jpg, png...)"
+        <input type="text" id="zoom-ext" placeholder="Расширение (jpg, png...)" value="{{ dist.zoom_ext }}"
           class="mt-2 w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm hidden focus:ring-1 focus:ring-blue-500 outline-none"/>
+      </div>
+
+      <!-- Fallback -->
+      <div class="border-t border-gray-100 pt-3 mb-4">
+        <div class="tooltip-wrap">
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <input type="checkbox" id="fallback-enabled"
+              {% if dist.fallback_enabled %}checked{% endif %}
+              class="accent-blue-600"/>
+            <span>Fallback для Увелич_фото</span>
+          </label>
+          <span class="tip-icon">?</span>
+          <div class="tip">Если после выбора Главной осталось одно изображение, оно автоматически попадёт в Увелич_фото.</div>
+        </div>
       </div>
 
       <button id="run-btn" onclick="runDistribution()"
@@ -98,8 +195,30 @@
   </div>
 </div>
 
+<!-- Save preset modal -->
+<div id="save-modal" class="fixed inset-0 bg-black bg-opacity-40 hidden z-50 flex items-center justify-center">
+  <div class="bg-white rounded-xl shadow-xl p-6 w-80">
+    <h3 class="font-semibold text-gray-800 mb-3">Сохранить пресет</h3>
+    <input type="text" id="save-preset-name" placeholder="Название пресета"
+      class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-1 focus:ring-1 focus:ring-blue-500 outline-none"/>
+    <div id="save-preset-err" class="text-xs text-red-500 mb-3 hidden"></div>
+    <div class="flex gap-2">
+      <button onclick="savePreset()"
+        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2 rounded-lg transition-colors">
+        Сохранить
+      </button>
+      <button onclick="closeSaveModal()"
+        class="flex-1 border border-gray-200 text-gray-600 text-sm px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+        Отмена
+      </button>
+    </div>
+    <div id="save-preset-ok" class="hidden mt-2 text-sm text-green-600 text-center">Пресет сохранён</div>
+  </div>
+</div>
+
 <script>
 const BATCH_ID = '{{ batch.id }}';
+let PRESETS = {{ presets | tojson }};
 
 // Show/hide rule inputs
 function updateRuleInputs(group) {
@@ -115,6 +234,117 @@ document.querySelectorAll('input[name="zoom_rule"]').forEach(r => r.addEventList
 updateRuleInputs('main');
 updateRuleInputs('zoom');
 
+// Preset management
+function applyPreset() {
+  const name = document.getElementById('preset-select').value;
+  const preset = PRESETS.find(p => p.name === name);
+  if (!preset) return;
+
+  const mr = document.querySelector(`input[name="main_rule"][value="${preset.main_rule}"]`);
+  if (mr) mr.checked = true;
+  document.getElementById('main-text').value = preset.main_text || '';
+  document.getElementById('main-ext').value = preset.main_ext || '';
+
+  const zr = document.querySelector(`input[name="zoom_rule"][value="${preset.zoom_rule}"]`);
+  if (zr) zr.checked = true;
+  document.getElementById('zoom-text').value = preset.zoom_text || '';
+  document.getElementById('zoom-ext').value = preset.zoom_ext || '';
+
+  document.getElementById('fallback-enabled').checked = !!preset.fallback_enabled;
+
+  updateRuleInputs('main');
+  updateRuleInputs('zoom');
+}
+
+function getCurrentRules() {
+  return {
+    main_rule: document.querySelector('input[name="main_rule"]:checked')?.value || 'first_file',
+    main_text: document.getElementById('main-text').value,
+    main_ext: document.getElementById('main-ext').value,
+    zoom_rule: document.querySelector('input[name="zoom_rule"]:checked')?.value || 'no_distribution',
+    zoom_text: document.getElementById('zoom-text').value,
+    zoom_ext: document.getElementById('zoom-ext').value,
+    fallback_enabled: document.getElementById('fallback-enabled').checked,
+  };
+}
+
+function openSaveModal() {
+  document.getElementById('save-preset-name').value = '';
+  document.getElementById('save-preset-err').classList.add('hidden');
+  document.getElementById('save-preset-ok').classList.add('hidden');
+  document.getElementById('save-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('save-preset-name').focus(), 50);
+}
+function closeSaveModal() {
+  document.getElementById('save-modal').classList.add('hidden');
+}
+
+async function savePreset() {
+  const name = document.getElementById('save-preset-name').value.trim();
+  const errEl = document.getElementById('save-preset-err');
+  if (!name) {
+    errEl.textContent = 'Введите название пресета';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  errEl.classList.add('hidden');
+  const exists = PRESETS.find(p => p.name === name);
+  if (exists) {
+    if (!confirm(`Пресет «${name}» уже существует. Перезаписать?`)) return;
+  }
+  const rules = getCurrentRules();
+  rules.name = name;
+  try {
+    const resp = await fetch('/api/presets/save', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(rules),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      document.getElementById('save-preset-ok').classList.remove('hidden');
+      // Reload page to refresh preset dropdown
+      setTimeout(() => location.reload(), 900);
+    } else {
+      errEl.textContent = data.error || 'Ошибка сохранения';
+      errEl.classList.remove('hidden');
+    }
+  } catch (e) {
+    errEl.textContent = 'Ошибка сети';
+    errEl.classList.remove('hidden');
+  }
+}
+
+async function confirmDeletePreset() {
+  const name = document.getElementById('preset-select').value;
+  if (!name) return;
+  if (!confirm(`Удалить пресет «${name}»?`)) return;
+  try {
+    const resp = await fetch('/api/presets/delete', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name}),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      location.reload();
+    } else {
+      alert(data.error || 'Ошибка удаления');
+    }
+  } catch (e) {
+    alert('Ошибка сети');
+  }
+}
+
+// Close modal on backdrop click
+document.getElementById('save-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeSaveModal();
+});
+// Save on Enter
+document.getElementById('save-preset-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') savePreset();
+});
+
 async function runDistribution() {
   const btn = document.getElementById('run-btn');
   btn.disabled = true;
@@ -126,6 +356,8 @@ async function runDistribution() {
   const zoom_text = document.getElementById('zoom-text').value;
   const main_ext = document.getElementById('main-ext').value;
   const zoom_ext = document.getElementById('zoom-ext').value;
+  const fallback_enabled = document.getElementById('fallback-enabled').checked;
+  const selected_preset = document.getElementById('preset-select').value;
 
   const form = new FormData();
   form.append('main_rule', main_rule);
@@ -134,6 +366,8 @@ async function runDistribution() {
   form.append('zoom_text', zoom_text);
   form.append('main_ext', main_ext);
   form.append('zoom_ext', zoom_ext);
+  form.append('fallback_enabled', fallback_enabled ? 'true' : 'false');
+  form.append('selected_preset', selected_preset);
 
   try {
     const resp = await fetch('/batch/' + BATCH_ID + '/distribute', {method:'POST', body:form});
