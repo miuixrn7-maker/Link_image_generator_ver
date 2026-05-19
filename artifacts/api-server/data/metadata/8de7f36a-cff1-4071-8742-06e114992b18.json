@@ -3,7 +3,7 @@
   "name": "тест_19-05-2026",
   "display_name": "тест",
   "created_at": "2026-05-19T19:50:30.927976",
-  "status": "distributed",
+  "status": "csv_ready",
   "archive_name": "картины_дубльартикул_дубльфайлы.zip",
   "archive_size": 242750614,
   "archive_path": "/home/runner/workspace/artifacts/api-server/data/uploads/8de7f36a-cff1-4071-8742-06e114992b18.zip",
@@ -114,12 +114,24 @@
           "height": 4000,
           "errors": [],
           "warnings": []
+        },
+        {
+          "safe_name": "ComfyUI_01694.jpeg",
+          "original_name": "ComfyUI_01694_.jpeg",
+          "display_name": "ComfyUI_01694_.jpeg",
+          "size": 91517,
+          "width": 800,
+          "height": 1200,
+          "errors": [],
+          "warnings": []
         }
       ],
       "assignment": {
-        "main": "4664.jpg",
+        "main": "ComfyUI_01694.jpeg",
         "zoom": "Vid_kartiny.png",
-        "rest": []
+        "rest": [
+          "4664.jpg"
+        ]
       }
     },
     "4670": {
@@ -472,13 +484,13 @@
   },
   "stats": {
     "total_articles": 12,
-    "total_images": 23,
+    "total_images": 24,
     "total_errors": 1,
     "total_warnings": 0
   },
-  "csv_path": null,
-  "csv_filename": null,
-  "csv_generated_at": null,
+  "csv_path": "/home/runner/workspace/artifacts/api-server/data/exports/тест_19-05-2026.csv",
+  "csv_filename": "тест_19-05-2026.csv",
+  "csv_generated_at": "2026-05-19T20:02:39.367624",
   "dist_settings": {
     "main_rule": "first_file",
     "main_text": "",
