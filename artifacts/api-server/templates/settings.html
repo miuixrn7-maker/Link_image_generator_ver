@@ -32,7 +32,7 @@
 
   {% set batch_days_val = settings.batch_expire_days | string if settings.batch_expire_days is not none else "never" %}
   {% set preview_hours_val = settings.preview_expire_hours | string if settings.preview_expire_hours is not none else "never" %}
-  {% set dup_behavior = settings.duplicate_article_behavior or "warn" %}
+  {% set thumb_quality = settings.thumbnail_quality | int if settings.thumbnail_quality is not none else 82 %}
 
   <form method="post" action="/settings/save">
     <!-- A. Хранилище -->
@@ -76,29 +76,25 @@
       </div>
     </div>
 
-    <!-- B. Дубликаты артикулов -->
+    <!-- B. Качество миниатюр -->
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-5">
-      <h2 class="font-semibold text-gray-800 mb-5">Дубликаты артикулов</h2>
+      <h2 class="font-semibold text-gray-800 mb-5">Превью изображений</h2>
 
       <div>
         <div class="tooltip-wrap mb-2">
-          <span class="text-sm font-medium text-gray-700">Одинаковые артикулы</span>
+          <span class="text-sm font-medium text-gray-700">Качество миниатюр</span>
           <span class="tip-icon">?</span>
-          <div class="tip">Что делать, если один и тот же артикул найден в разных папках архива.</div>
+          <div class="tip">JPEG-качество превью в интерфейсе. Влияет на скорость загрузки и чёткость изображений. На оригинальные файлы не влияет.</div>
         </div>
         <div class="space-y-2 mt-1">
-          <label class="flex items-start gap-2 text-sm cursor-pointer">
-            <input type="radio" name="duplicate_article_behavior" value="warn"
-              {% if dup_behavior == 'warn' %}checked{% endif %}
-              class="text-blue-600 accent-blue-600 mt-0.5"/>
-            <span>Не объединять, показать предупреждение</span>
+          {% for val, label in [(60,'60 — меньше размер, быстрее загрузка'),(80,'80 — баланс качества и размера'),(100,'100 — максимальное качество')] %}
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <input type="radio" name="thumbnail_quality" value="{{ val }}"
+              {% if val == thumb_quality %}checked{% endif %}
+              class="text-blue-600 accent-blue-600"/>
+            {{ label }}
           </label>
-          <label class="flex items-start gap-2 text-sm cursor-pointer">
-            <input type="radio" name="duplicate_article_behavior" value="error"
-              {% if dup_behavior == 'error' %}checked{% endif %}
-              class="text-blue-600 accent-blue-600 mt-0.5"/>
-            <span>Считать ошибкой</span>
-          </label>
+          {% endfor %}
         </div>
       </div>
     </div>

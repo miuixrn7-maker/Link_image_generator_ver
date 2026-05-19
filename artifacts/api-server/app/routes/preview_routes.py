@@ -261,6 +261,64 @@ async def gen_csv(request: Request, batch_id: str):
     return JSONResponse(result)
 
 
+@router.post("/batch/{batch_id}/api/rename-article")
+async def rename_article_api(request: Request, batch_id: str):
+    if not is_authenticated(request):
+        return JSONResponse({"ok": False}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False}, status_code=400)
+    article_id = body.get("article_id", "").strip()
+    new_display = body.get("new_display", "").strip()
+    if not article_id or not new_display:
+        return JSONResponse({"ok": False, "error": "Недостаточно данных"}, status_code=400)
+    meta = load_metadata(batch_id)
+    if not meta:
+        return JSONResponse({"ok": False}, status_code=404)
+    articles = meta.get("articles", {})
+    if article_id not in articles:
+        return JSONResponse({"ok": False, "error": "Артикул не найден"}, status_code=404)
+    old_display = articles[article_id].get("display_article", article_id)
+    articles[article_id]["display_article"] = new_display
+    meta["articles"] = articles
+    ok = save_metadata(batch_id, meta)
+    log_event(batch_id, "info", f"Артикул переименован: «{old_display}» → «{new_display}»", article=article_id)
+    return JSONResponse({"ok": ok, "new_display": new_display})
+
+
+@router.post("/batch/{batch_id}/api/clear-rest-all")
+async def clear_rest_all(request: Request, batch_id: str):
+    if not is_authenticated(request):
+        return JSONResponse({"ok": False}, status_code=401)
+    meta = load_metadata(batch_id)
+    if not meta:
+        return JSONResponse({"ok": False}, status_code=404)
+    articles = meta.get("articles", {})
+    deleted_count = 0
+    for article_id, article in articles.items():
+        assignment = article.get("assignment", {})
+        rest = list(assignment.get("rest", []))
+        main_f = assignment.get("main")
+        zoom_f = assignment.get("zoom")
+        for fname in rest:
+            if fname in (main_f, zoom_f):
+                continue
+            fpath = BATCHES_DIR / batch_id / article_id / fname
+            try:
+                fpath.unlink(missing_ok=True)
+                deleted_count += 1
+            except Exception:
+                pass
+            article["files"] = [f for f in article.get("files", []) if f["safe_name"] != fname]
+        assignment["rest"] = []
+        article["assignment"] = assignment
+    meta["articles"] = articles
+    save_metadata(batch_id, meta)
+    log_event(batch_id, "info", f"Остальные_фото удалены у всех артикулов: {deleted_count} файлов")
+    return JSONResponse({"ok": True, "deleted": deleted_count})
+
+
 @router.post("/batch/{batch_id}/api/rename-batch")
 async def rename_batch_api(request: Request, batch_id: str):
     if not is_authenticated(request):

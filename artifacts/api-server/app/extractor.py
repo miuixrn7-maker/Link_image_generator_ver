@@ -76,52 +76,48 @@ def extract_zip(batch_id: str, zip_path: Path, progress_cb: Optional[Callable] =
                 folder_files[folder_path] = []
             folder_files[folder_path].append((info, decoded_name, filename, ext))
 
-        # Detect articles: folders that directly contain supported images
-        # article_name → [(folder_path, files), ...]
-        article_folders: dict[str, list] = {}
-        for folder_path, files in folder_files.items():
-            has_images = any(ext in SUPPORTED_IMAGES for _, _, _, ext in files)
-            if has_images:
-                article_name = folder_path.split("/")[-1] if folder_path else "root"
-                if article_name not in article_folders:
-                    article_folders[article_name] = []
-                article_folders[article_name].append((folder_path, files))
+        # All folder paths that directly contain at least one supported image
+        image_bearing_paths = {
+            fp for fp, fpfiles in folder_files.items()
+            if any(ext in SUPPORTED_IMAGES for _, _, _, ext in fpfiles)
+        }
 
-        if not article_folders:
+        # Only paths with NO ancestor that also has images become article roots.
+        # This prevents subfolder images from creating spurious "duplicate" articles.
+        def _has_image_ancestor(path: str, all_paths: set) -> bool:
+            parts = path.split("/")
+            for i in range(1, len(parts)):
+                ancestor = "/".join(parts[:i])
+                if ancestor in all_paths:
+                    return True
+            return False
+
+        top_article_paths = {
+            fp for fp in image_bearing_paths
+            if not _has_image_ancestor(fp, image_bearing_paths)
+        }
+
+        if not top_article_paths:
             log_event(batch_id, "error", "В архиве не найдено ни одного артикула с изображениями")
             return {"ok": False, "error": "В архиве нет папок с изображениями"}
 
-        # Detect duplicate article names (same name in multiple parent folders)
+        # Build article_folders: name → [(folder_path, all_files_including_nested)]
+        article_folders: dict[str, list] = {}
+        for article_path in top_article_paths:
+            article_name = article_path.split("/")[-1] if article_path else "root"
+            # Collect files directly in this path + all descendant paths
+            combined = list(folder_files.get(article_path, []))
+            for fp, fp_files in folder_files.items():
+                if fp != article_path and fp.startswith(article_path + "/"):
+                    combined.extend(fp_files)
+            if article_name not in article_folders:
+                article_folders[article_name] = []
+            article_folders[article_name].append((article_path, combined))
+
+        # Detect duplicate article names (same name under different parent paths)
         duplicate_names = {
             name for name, folders in article_folders.items() if len(folders) > 1
         }
-
-        # Load duplicate behavior from settings
-        dup_behavior = "warn"
-        try:
-            from app.settings_manager import get_setting
-            dup_behavior = get_setting("duplicate_article_behavior") or "warn"
-        except Exception:
-            pass
-
-        # If setting is "error" — stop extraction and report
-        if duplicate_names and dup_behavior == "error":
-            dup_details = []
-            for name in sorted(duplicate_names):
-                folders = [fp for fp, _ in article_folders[name]]
-                dup_details.append(f"«{name}»: {', '.join(folders)}")
-            error_msg = (
-                "В архиве найдены дубли артикулов. "
-                "Переименуйте папки или измените настройку обработки дублей."
-            )
-            log_event(batch_id, "error", error_msg)
-            for detail in dup_details:
-                log_event(batch_id, "error", detail)
-            meta["status"] = "error"
-            meta["extraction_error"] = error_msg
-            meta["duplicate_details"] = dup_details
-            save_metadata(batch_id, meta)
-            return {"ok": False, "error": error_msg, "duplicates": list(duplicate_names)}
 
         # Build flat entry list: one entry per (article_name, folder_path) pair
         # For duplicates: article_id = article_name + "__" + 4-char hash of folder_path
@@ -169,11 +165,9 @@ def extract_zip(batch_id: str, zip_path: Path, progress_cb: Optional[Callable] =
             errors: list = []
 
             if is_dup:
-                dup_warn = "Дубликат артикула — найдено несколько папок с таким названием"
-                warnings.append(dup_warn)
                 log_event(
-                    batch_id, "warning",
-                    f"Дубликат артикула «{display_article}» из папки «{folder_path}»",
+                    batch_id, "info",
+                    f"Артикул «{display_article}» найден в нескольких папках, папка: «{folder_path}»",
                     article=display_article,
                 )
 

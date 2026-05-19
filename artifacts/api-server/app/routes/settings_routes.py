@@ -29,18 +29,19 @@ async def save_settings_route(
     request: Request,
     batch_expire_days: str = Form("14"),
     preview_expire_hours: str = Form("24"),
-    duplicate_article_behavior: str = Form("warn"),
+    thumbnail_quality: str = Form("82"),
 ):
     if not is_authenticated(request):
         return JSONResponse({"ok": False}, status_code=401)
 
     batch_days = None if batch_expire_days == "never" else int(batch_expire_days)
     preview_hours = None if preview_expire_hours == "never" else int(preview_expire_hours)
+    thumb_q = int(thumbnail_quality) if thumbnail_quality.isdigit() else 82
 
     save_settings({
         "batch_expire_days": batch_days,
         "preview_expire_hours": preview_hours,
-        "duplicate_article_behavior": duplicate_article_behavior,
+        "thumbnail_quality": thumb_q,
     })
     return RedirectResponse(url="/settings?saved=1", status_code=302)
 

@@ -68,7 +68,7 @@
     <div id="extraction-section" class="hidden mt-5 space-y-3">
       <div class="flex items-center gap-2 text-sm text-gray-700">
         <svg class="animate-spin text-blue-600" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-        Распаковка архива...
+        <span id="extract-status-text">Сканирование архива...</span>
       </div>
       <div class="w-full bg-gray-100 rounded-full h-2">
         <div id="extract-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width:0%"></div>
@@ -249,6 +249,7 @@ async function startExtraction() {
       const pct = prog.progress || 0;
       document.getElementById('extract-bar').style.width = pct + '%';
       document.getElementById('extract-progress-text').textContent = pct + '%';
+      if (prog.status_msg) document.getElementById('extract-status-text').textContent = prog.status_msg;
       if (prog.done) {
         clearInterval(extractPollInterval);
         if (prog.error) {

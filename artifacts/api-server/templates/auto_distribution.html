@@ -64,22 +64,24 @@
           <div class="tip">Как автоматически выбирать главное изображение.</div>
         </div>
         <div class="space-y-2">
-          {% for val, label in [('first_file','Первый файл'),('last_file','Последний файл'),('contains_text','Имя содержит текст'),('extension','Расширение файла'),('no_distribution','Без автораспределения')] %}
+          {% for val, label, tip in [
+            ('first_file','Первый файл',''),
+            ('last_file','Последний файл',''),
+            ('contains_text','Имя содержит текст','Выбирает файл, если его имя содержит указанный текст.'),
+            ('extension','Расширение файла','Выбирает файл по формату изображения, например .jpg, .png или .webp.'),
+            ('char_count','Кол-во символов','Выбирает файл, у которого имя (без расширения) содержит ровно столько символов.'),
+            ('article_match','Артикул совпадает с именем','Выбирает файл, имя которого (без расширения) совпадает с артикулом папки.'),
+            ('no_distribution','Без автораспределения',''),
+          ] %}
           <label class="flex items-center gap-2 text-sm cursor-pointer">
             <input type="radio" name="main_rule" value="{{ val }}"
               {% if val == dist.main_rule %}checked{% endif %}
               class="text-blue-600 accent-blue-600"/>
-            {% if val == 'contains_text' %}
+            {% if tip %}
             <div class="tooltip-wrap">
               <span>{{ label }}</span>
               <span class="tip-icon">?</span>
-              <div class="tip">Выбирает файл, если его имя содержит указанный текст.</div>
-            </div>
-            {% elif val == 'extension' %}
-            <div class="tooltip-wrap">
-              <span>{{ label }}</span>
-              <span class="tip-icon">?</span>
-              <div class="tip">Выбирает файл по формату изображения, например .jpg, .png или .webp.</div>
+              <div class="tip">{{ tip }}</div>
             </div>
             {% else %}
             {{ label }}
@@ -100,22 +102,24 @@
           <div class="tip">Как автоматически выбирать изображение для колонки Увелич_фото.</div>
         </div>
         <div class="space-y-2">
-          {% for val, label in [('first_file','Первый файл'),('last_file','Последний файл'),('contains_text','Имя содержит текст'),('extension','Расширение файла'),('no_distribution','Без автораспределения')] %}
+          {% for val, label, tip in [
+            ('first_file','Первый файл',''),
+            ('last_file','Последний файл',''),
+            ('contains_text','Имя содержит текст','Выбирает файл, если его имя содержит указанный текст.'),
+            ('extension','Расширение файла','Выбирает файл по формату изображения, например .jpg, .png или .webp.'),
+            ('char_count','Кол-во символов','Выбирает файл, у которого имя (без расширения) содержит ровно столько символов.'),
+            ('article_match','Артикул совпадает с именем','Выбирает файл, имя которого (без расширения) совпадает с артикулом папки.'),
+            ('no_distribution','Без автораспределения',''),
+          ] %}
           <label class="flex items-center gap-2 text-sm cursor-pointer">
             <input type="radio" name="zoom_rule" value="{{ val }}"
               {% if val == dist.zoom_rule %}checked{% endif %}
               class="text-blue-600 accent-blue-600"/>
-            {% if val == 'contains_text' %}
+            {% if tip %}
             <div class="tooltip-wrap">
               <span>{{ label }}</span>
               <span class="tip-icon">?</span>
-              <div class="tip">Выбирает файл, если его имя содержит указанный текст.</div>
-            </div>
-            {% elif val == 'extension' %}
-            <div class="tooltip-wrap">
-              <span>{{ label }}</span>
-              <span class="tip-icon">?</span>
-              <div class="tip">Выбирает файл по формату изображения, например .jpg, .png или .webp.</div>
+              <div class="tip">{{ tip }}</div>
             </div>
             {% else %}
             {{ label }}
@@ -226,8 +230,18 @@ function updateRuleInputs(group) {
   const textInput = document.getElementById(`${group}-text`);
   const extInput = document.getElementById(`${group}-ext`);
   if (!textInput) return;
-  textInput.classList.toggle('hidden', selected !== 'contains_text');
+  const showText = selected === 'contains_text' || selected === 'char_count';
+  textInput.classList.toggle('hidden', !showText);
   extInput.classList.toggle('hidden', selected !== 'extension');
+  if (selected === 'char_count') {
+    textInput.placeholder = 'Количество символов (например: 4)';
+    textInput.setAttribute('type', 'number');
+    textInput.setAttribute('min', '1');
+  } else {
+    textInput.placeholder = 'Текст для поиска';
+    textInput.setAttribute('type', 'text');
+    textInput.removeAttribute('min');
+  }
 }
 document.querySelectorAll('input[name="main_rule"]').forEach(r => r.addEventListener('change', () => updateRuleInputs('main')));
 document.querySelectorAll('input[name="zoom_rule"]').forEach(r => r.addEventListener('change', () => updateRuleInputs('zoom')));

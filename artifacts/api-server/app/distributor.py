@@ -4,11 +4,10 @@ from app.metadata import load_metadata, save_metadata
 from app.logger_utils import log_event
 
 
-def _match_file(files: list, rule: dict, exclude: set = None) -> str | None:
+def _match_file(files: list, rule: dict, exclude: set = None, article_display: str = "") -> str | None:
     if exclude is None:
         exclude = set()
     candidates = [f for f in files if f["safe_name"] not in exclude and not f["errors"]]
-    # also include files with only size error for assignment
     all_candidates = [f for f in files if f["safe_name"] not in exclude]
 
     r = rule.get("rule", "first_file")
@@ -35,6 +34,21 @@ def _match_file(files: list, rule: dict, exclude: set = None) -> str | None:
         matches = [f for f in pool if Path(f["safe_name"]).suffix.lower() == ext.lower()]
         return matches[0]["safe_name"] if matches else None
 
+    if r == "char_count" and text:
+        try:
+            n = int(text)
+        except (ValueError, TypeError):
+            return None
+        matches = [f for f in pool if len(Path(f["safe_name"]).stem) == n]
+        return matches[0]["safe_name"] if matches else None
+
+    if r == "article_match":
+        target = article_display.strip() if article_display else ""
+        if not target:
+            return None
+        matches = [f for f in pool if Path(f["safe_name"]).stem == target]
+        return matches[0]["safe_name"] if matches else None
+
     return None
 
 
@@ -58,31 +72,27 @@ def run_auto_distribution(batch_id: str, rules: dict) -> dict:
         if not files:
             continue
 
+        article_display = article.get("display_article", article_name)
         all_names = set(f["safe_name"] for f in files)
         used = set()
 
-        # Assign main
-        main_file = _match_file(files, main_rule, used)
+        main_file = _match_file(files, main_rule, used, article_display)
         if main_file:
             used.add(main_file)
 
-        # Assign zoom (must differ from main)
-        zoom_file = _match_file(files, zoom_rule, used)
+        zoom_file = _match_file(files, zoom_rule, used, article_display)
         if zoom_file:
             used.add(zoom_file)
 
-        # Rest = everything not used
         rest = [f["safe_name"] for f in files if f["safe_name"] not in used]
 
-        # Fallback: if main exists, zoom empty, rest has exactly 1 image
         fallback_enabled = rules.get("fallback_enabled", True)
         if fallback_enabled and main_file and not zoom_file and len(rest) == 1:
             zoom_file = rest[0]
             rest = []
-            display_name = article.get("display_article", article_name)
             log_event(batch_id, "info",
                       "Увелич_фото заполнено автоматически по fallback-правилу.",
-                      article=display_name)
+                      article=article_display)
 
         article["assignment"] = {
             "main": main_file,
@@ -90,7 +100,6 @@ def run_auto_distribution(batch_id: str, rules: dict) -> dict:
             "rest": rest,
         }
 
-        # Count issues
         if article.get("errors"):
             errors_count += 1
         if article.get("warnings"):
@@ -108,9 +117,7 @@ def run_auto_distribution(batch_id: str, rules: dict) -> dict:
     meta["status"] = "distributed"
     save_metadata(batch_id, meta)
 
-    if errors_count > 0:
-        status_msg = "Автораспределение выполнено с предупреждениями"
-    elif warnings_count > 0:
+    if errors_count > 0 or warnings_count > 0:
         status_msg = "Автораспределение выполнено с предупреждениями"
     else:
         status_msg = "Автораспределение выполнено"

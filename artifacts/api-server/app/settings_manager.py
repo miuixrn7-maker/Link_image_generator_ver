@@ -10,7 +10,7 @@ SETTINGS_FILE = METADATA_DIR / "settings.json"
 DEFAULTS: dict = {
     "batch_expire_days": 14,
     "preview_expire_hours": 24,
-    "duplicate_article_behavior": "warn",
+    "thumbnail_quality": 82,
 }
 
 

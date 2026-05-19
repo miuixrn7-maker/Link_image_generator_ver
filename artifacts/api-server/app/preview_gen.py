@@ -8,6 +8,17 @@ from app.config import BATCHES_DIR, PREVIEWS_DIR, PREVIEW_MAX_SIDE, PREVIEW_QUAL
 from app.logger_utils import log_event
 
 
+def _get_quality() -> int:
+    try:
+        from app.settings_manager import get_setting
+        q = get_setting("thumbnail_quality")
+        if q is not None:
+            return int(q)
+    except Exception:
+        pass
+    return PREVIEW_QUALITY
+
+
 def get_preview_path(batch_id: str, article: str, safe_name: str) -> Path:
     return PREVIEWS_DIR / batch_id / article / safe_name
 
@@ -38,7 +49,6 @@ def generate_preview(batch_id: str, article: str, safe_name: str, force: bool = 
                 new_w = int(w * ratio)
                 new_h = int(h * ratio)
                 img = img.resize((new_w, new_h), Image.LANCZOS)
-            # Determine output format
             ext = Path(safe_name).suffix.lower()
             fmt = 'JPEG'
             out_name = safe_name
@@ -49,7 +59,7 @@ def generate_preview(batch_id: str, article: str, safe_name: str, force: bool = 
                 fmt = 'JPEG'
             dst_final = dst.parent / out_name
             dst_final.parent.mkdir(parents=True, exist_ok=True)
-            img.save(dst_final, format=fmt, quality=PREVIEW_QUALITY, optimize=True)
+            img.save(dst_final, format=fmt, quality=_get_quality(), optimize=True)
         return True
     except Exception:
         return False

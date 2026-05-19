@@ -36,6 +36,9 @@
       <button id="undo-swap-btn" onclick="undoSwapAll()" class="hidden text-xs border border-yellow-300 text-yellow-700 px-3 py-1.5 rounded-lg hover:bg-yellow-50">
         Отменить обмен
       </button>
+      <button onclick="clearRestAll()" class="text-xs border border-red-200 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
+        Удалить Остальные_фото
+      </button>
       <button onclick="generateCSV()"
         class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors">
         Создать CSV
@@ -67,6 +70,15 @@
 
     <button onclick="collapseAll()" class="text-xs border border-gray-300 text-gray-600 px-2.5 py-1.5 rounded-lg hover:bg-gray-50">Свернуть все</button>
     <button onclick="expandAll()" class="text-xs border border-gray-300 text-gray-600 px-2.5 py-1.5 rounded-lg hover:bg-gray-50">Развернуть все</button>
+
+    <select id="page-size" onchange="applyFilters()"
+      class="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
+      <option value="20">20 / стр.</option>
+      <option value="50">50 / стр.</option>
+      <option value="70">70 / стр.</option>
+      <option value="100">100 / стр.</option>
+      <option value="all">Все</option>
+    </select>
 
     <div class="flex items-center gap-2 ml-auto">
       <span class="text-xs text-gray-500">Размер:</span>
@@ -100,6 +112,21 @@
     <div class="flex gap-3">
       <button onclick="saveBatchRename()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg">Сохранить</button>
       <button onclick="closeRenameModal()" class="px-4 py-2 border border-gray-300 text-sm rounded-lg text-gray-600 hover:bg-gray-50">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rename article modal -->
+<div id="rename-article-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center" onclick="closeRenameArticleModal(event)">
+  <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm" onclick="event.stopPropagation()">
+    <h3 class="font-semibold text-gray-800 mb-1">Переименовать артикул</h3>
+    <p class="text-xs text-gray-500 mb-4">Отображаемое имя в интерфейсе и CSV. Папка на диске не меняется.</p>
+    <input type="text" id="rename-article-input" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"/>
+    <input type="hidden" id="rename-article-id"/>
+    <div id="rename-article-error" class="hidden text-sm text-red-600 mb-3"></div>
+    <div class="flex gap-3">
+      <button onclick="saveArticleRename()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg">Сохранить</button>
+      <button onclick="closeRenameArticleModal()" class="px-4 py-2 border border-gray-300 text-sm rounded-lg text-gray-600 hover:bg-gray-50">Отмена</button>
     </div>
   </div>
 </div>
@@ -207,6 +234,7 @@ function renderArticle(articleName, article) {
       ${errCount ? `<span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">${errCount} ошибок</span>` : ''}
       ${warnCount ? `<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">${warnCount} предупр.</span>` : ''}
       <div class="flex-1"></div>
+      <button onclick="event.stopPropagation();openRenameArticle('${articleName}')" class="text-xs border border-gray-200 text-gray-500 px-2 py-1 rounded hover:bg-gray-100 mr-1" title="Переименовать артикул">✎</button>
       <button onclick="event.stopPropagation();swapOne('${articleName}')" class="text-xs border border-gray-200 text-gray-500 px-2 py-1 rounded hover:bg-gray-100">⇄ Поменять</button>
     </div>
     <div class="article-body px-4 py-4">
@@ -453,6 +481,8 @@ async function undoSwapAll() {
 function applyFilters() {
   const q = (document.getElementById('search-input').value||'').toLowerCase();
   const f = document.getElementById('filter-select').value;
+  const pageSizeVal = document.getElementById('page-size')?.value || 'all';
+  const pageLimit = pageSizeVal === 'all' ? Infinity : parseInt(pageSizeVal);
   const cards = document.querySelectorAll('.article-card');
   let visible = 0;
   cards.forEach(card => {
@@ -465,9 +495,10 @@ function applyFilters() {
     else if (f === 'no-zoom') matchFilter = card.dataset.hasZoom !== '1';
     else if (f === 'duplicates') matchFilter = card.dataset.hasDuplicates === '1';
     else if (f === 'has-rest') matchFilter = card.dataset.hasRest === '1';
-    const show = matchSearch && matchFilter;
+    const withinPage = visible < pageLimit;
+    const show = matchSearch && matchFilter && withinPage;
     card.classList.toggle('hidden', !show);
-    if (show) visible++;
+    if (matchSearch && matchFilter) visible++;
   });
   document.getElementById('no-results').classList.toggle('hidden', visible > 0);
 }
@@ -491,6 +522,56 @@ function toggleArticle(name) {
 }
 function collapseAll() { document.querySelectorAll('.article-body').forEach(b => b.classList.add('hidden')); document.querySelectorAll('.article-chevron').forEach(c => c.classList.remove('rotate-180')); }
 function expandAll() { document.querySelectorAll('.article-body').forEach(b => b.classList.remove('hidden')); document.querySelectorAll('.article-chevron').forEach(c => c.classList.add('rotate-180')); }
+
+// Rename article modal
+function openRenameArticle(articleId) {
+  const article = batchMeta?.articles?.[articleId];
+  if (!article) return;
+  document.getElementById('rename-article-id').value = articleId;
+  document.getElementById('rename-article-input').value = article.display_article || articleId;
+  document.getElementById('rename-article-error').classList.add('hidden');
+  document.getElementById('rename-article-modal').classList.remove('hidden');
+  document.getElementById('rename-article-input').focus();
+}
+function closeRenameArticleModal(e) {
+  if (!e || e.target === document.getElementById('rename-article-modal')) {
+    document.getElementById('rename-article-modal').classList.add('hidden');
+  }
+}
+async function saveArticleRename() {
+  const articleId = document.getElementById('rename-article-id').value;
+  const newDisplay = document.getElementById('rename-article-input').value.trim();
+  const errEl = document.getElementById('rename-article-error');
+  if (!newDisplay) { errEl.textContent = 'Введите название'; errEl.classList.remove('hidden'); return; }
+  errEl.classList.add('hidden');
+  const r = await fetch('/batch/' + BATCH_ID + '/api/rename-article', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({article_id: articleId, new_display: newDisplay})
+  });
+  const d = await r.json();
+  if (d.ok) {
+    if (batchMeta?.articles?.[articleId]) batchMeta.articles[articleId].display_article = d.new_display;
+    document.getElementById('rename-article-modal').classList.add('hidden');
+    renderAll();
+  } else {
+    errEl.textContent = d.error || 'Ошибка сохранения';
+    errEl.classList.remove('hidden');
+  }
+}
+
+// Clear rest for all articles
+async function clearRestAll() {
+  const total = Object.values(batchMeta?.articles||{}).reduce((s,a) => s+(a.assignment?.rest?.length||0), 0);
+  if (!total) { alert('Нет файлов в Остальные_фото'); return; }
+  if (!confirm(`Удалить ${total} файл(ов) из Остальные_фото у всех артикулов? Это действие необратимо.`)) return;
+  const r = await fetch('/batch/' + BATCH_ID + '/api/clear-rest-all', {method:'POST'});
+  const d = await r.json();
+  if (d.ok) {
+    await loadMeta();
+  } else {
+    alert('Ошибка: ' + (d.error || 'неизвестная'));
+  }
+}
 
 // Rename batch modal
 function openRenameModal() {
