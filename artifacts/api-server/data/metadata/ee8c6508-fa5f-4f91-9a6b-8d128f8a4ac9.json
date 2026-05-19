@@ -3,7 +3,7 @@
   "name": "интерьерка 20 шт_19-05-2026",
   "display_name": "интерьерка 20 шт",
   "created_at": "2026-05-19T19:30:55.797621",
-  "status": "extracted",
+  "status": "csv_ready",
   "archive_name": "интерьерка_20шт.zip",
   "archive_size": 373079114,
   "archive_path": "/home/runner/workspace/artifacts/api-server/data/uploads/ee8c6508-fa5f-4f91-9a6b-8d128f8a4ac9.zip",
@@ -51,9 +51,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3539_1.jpg",
+        "zoom": "3539.jpg",
+        "rest": [
+          "3539.png"
+        ]
       }
     },
     "3548": {
@@ -99,9 +101,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3548_1.jpg",
+        "zoom": "3548.jpg",
+        "rest": [
+          "3548.png"
+        ]
       }
     },
     "3545": {
@@ -147,9 +151,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3545_1.jpg",
+        "zoom": "3545.jpg",
+        "rest": [
+          "3545.png"
+        ]
       }
     },
     "3546": {
@@ -195,9 +201,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3546_1.jpg",
+        "zoom": "3546.jpg",
+        "rest": [
+          "3546.png"
+        ]
       }
     },
     "3532": {
@@ -243,9 +251,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3532_1.jpg",
+        "zoom": "3532.jpg",
+        "rest": [
+          "3532.png"
+        ]
       }
     },
     "3540": {
@@ -291,9 +301,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3540_1.jpg",
+        "zoom": "3540.jpg",
+        "rest": [
+          "3540.png"
+        ]
       }
     },
     "3538": {
@@ -339,9 +351,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3538_1.jpg",
+        "zoom": "3538.jpg",
+        "rest": [
+          "3538.png"
+        ]
       }
     },
     "3536": {
@@ -387,9 +401,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3536_1.jpg",
+        "zoom": "3536.jpg",
+        "rest": [
+          "3536.png"
+        ]
       }
     },
     "3535": {
@@ -435,9 +451,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3535_1.jpg",
+        "zoom": "3535.jpg",
+        "rest": [
+          "3535.png"
+        ]
       }
     },
     "3531": {
@@ -483,9 +501,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3531_1.jpg",
+        "zoom": "3531.jpg",
+        "rest": [
+          "3531.png"
+        ]
       }
     },
     "3541": {
@@ -531,9 +551,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3541_1.jpg",
+        "zoom": "3541.jpg",
+        "rest": [
+          "3541.png"
+        ]
       }
     },
     "3537": {
@@ -579,9 +601,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3537_1.jpg",
+        "zoom": "3537.jpg",
+        "rest": [
+          "3537.png"
+        ]
       }
     },
     "3544": {
@@ -627,9 +651,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3544_1.jpg",
+        "zoom": "3544.jpg",
+        "rest": [
+          "3544.png"
+        ]
       }
     },
     "3533": {
@@ -675,9 +701,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3533_1.jpg",
+        "zoom": "3533.jpg",
+        "rest": [
+          "3533.png"
+        ]
       }
     },
     "3542": {
@@ -723,9 +751,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3542_1.jpg",
+        "zoom": "3542.jpg",
+        "rest": [
+          "3542.png"
+        ]
       }
     },
     "3543": {
@@ -771,9 +801,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3543_1.jpg",
+        "zoom": "3543.jpg",
+        "rest": [
+          "3543.png"
+        ]
       }
     },
     "3530": {
@@ -819,9 +851,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3530_1.jpg",
+        "zoom": "3530.jpg",
+        "rest": [
+          "3530.png"
+        ]
       }
     },
     "3534": {
@@ -867,9 +901,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3534_1.jpg",
+        "zoom": "3534.jpg",
+        "rest": [
+          "3534.png"
+        ]
       }
     },
     "3547": {
@@ -915,9 +951,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3547_1.jpg",
+        "zoom": "3547.jpg",
+        "rest": [
+          "3547.png"
+        ]
       }
     },
     "3549": {
@@ -963,9 +1001,11 @@
         }
       ],
       "assignment": {
-        "main": null,
-        "zoom": null,
-        "rest": []
+        "main": "3549_1.jpg",
+        "zoom": "3549.jpg",
+        "rest": [
+          "3549.png"
+        ]
       }
     }
   },
@@ -990,7 +1030,7 @@
   },
   "csv_path": "/home/runner/workspace/artifacts/api-server/data/exports/интерьерка 20 шт_19-05-2026.csv",
   "csv_filename": "интерьерка 20 шт_19-05-2026.csv",
-  "csv_generated_at": "2026-05-19T19:38:56.915926",
+  "csv_generated_at": "2026-05-19T19:52:17.971300",
   "dist_settings": {
     "main_rule": "char_count",
     "main_text": "6",

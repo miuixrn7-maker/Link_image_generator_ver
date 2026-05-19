@@ -1,0 +1,169 @@
+Add functionality to manually add a new image in the batch Preview page.
+
+Goal:
+In Preview, the user must be able to add an additional image to an existing article without re-uploading the whole ZIP archive.
+
+Do NOT change CSV format.
+Do NOT change auto-distribution logic.
+Do NOT rewrite the preview page.
+Add this as a small practical feature.
+
+UI requirements:
+
+1. In each article card in Preview, add button:
+   “Добавить изображение”
+
+2. The button should be near article actions, for example near:
+
+* “Поменять местами”
+* collapse/expand controls
+
+3. When user clicks “Добавить изображение”, open modal window.
+
+Modal title:
+“Добавить изображение”
+
+Modal fields:
+
+* file input for image
+* target column selector:
+
+  * Главная
+  * Увелич_фото
+  * Остальные_фото
+
+Default target column:
+Остальные_фото
+
+Supported image formats:
+
+* .jpg
+* .jpeg
+* .png
+* .webp
+
+Behavior:
+
+1. User selects image file.
+
+2. User selects target column.
+
+3. User clicks:
+   “Добавить”
+
+4. App uploads the image into the current article folder.
+
+5. Filename handling:
+
+* recover/normalize/transliterate filename the same way as extracted ZIP files
+* use safe Latin filename for storage and URL
+* keep original readable filename in metadata
+* avoid conflicts with existing filenames in the article
+* if name already exists, add suffix:
+  _manual
+  _manual_2
+  _manual_3
+
+Example:
+Вид картины.png
+→ vid_kartiny.png
+
+If vid_kartiny.png already exists:
+→ vid_kartiny_manual.png
+
+6. Validation:
+
+* if file is not supported format, show error:
+  “Неподдерживаемый формат файла”
+* if file is corrupted or not a real image, show error:
+  “Файл повреждён или не является изображением”
+* if file size is greater than 10 MB, add error:
+  “Файл больше 10 MB”
+  but still allow adding the image
+* generate preview if possible
+
+7. Target column behavior:
+
+If target = Остальные_фото:
+
+* append image to the end of Остальные_фото
+
+If target = Главная:
+
+* if Главная is empty, place image there
+* if Главная already has an image, ask confirmation:
+  “В колонке Главная уже есть изображение. Заменить его?”
+* if user confirms, move old Главная image to Остальные_фото and put new image into Главная
+* if user cancels, do nothing
+
+If target = Увелич_фото:
+
+* if Увелич_фото is empty, place image there
+* if Увелич_фото already has an image, ask confirmation:
+  “В колонке Увелич_фото уже есть изображение. Заменить его?”
+* if user confirms, move old Увелич_фото image to Остальные_фото and put new image into Увелич_фото
+* if user cancels, do nothing
+
+8. Metadata:
+   Update batch metadata immediately:
+
+* add new file object
+* original_name
+* safe name
+* file size
+* image dimensions
+* preview path
+* errors/warnings
+* assignment column
+* updated article counters
+* updated batch counters
+
+9. UI:
+   After adding image:
+
+* close modal
+* re-render only the affected article if possible
+* keep current filters/search state
+* keep current scroll position if possible
+* show toast:
+  “Изображение добавлено”
+
+If image was added with >10MB error:
+show toast:
+“Изображение добавлено, но файл больше 10 MB”
+
+10. Logs:
+    Add log entry:
+    “Изображение добавлено вручную: filename → article”
+
+11. CSV:
+    The newly added image must appear in CSV according to its assigned column:
+
+* Главная
+* Увелич_фото
+* Остальные_фото
+
+12. Security:
+
+* validate uploaded filename
+* prevent path traversal
+* save only inside current article folder
+* do not allow upload outside batch directory
+* do not overwrite existing files
+
+13. Testing:
+    Test:
+
+* add image to Остальные_фото
+* add image to empty Главная
+* add image to occupied Главная and confirm replacement
+* add image to occupied Главная and cancel
+* add image to empty Увелич_фото
+* add image to occupied Увелич_фото and confirm replacement
+* add unsupported file
+* add corrupted image
+* add image >10MB
+* verify preview generated
+* verify metadata updated
+* verify CSV contains new link
+* verify direct link opens

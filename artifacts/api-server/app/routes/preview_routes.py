@@ -1,4 +1,5 @@
 import os
+import io
 from pathlib import Path
 from fastapi import APIRouter, Request, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, FileResponse
@@ -14,6 +15,24 @@ from app.utils import safe_filename, make_unique_filename
 
 from app.templates import templates
 router = APIRouter()
+
+_ALLOWED_IMAGE_EXTS = {'.jpg', '.jpeg', '.png', '.webp'}
+
+
+def _make_manual_filename(safe_name: str, existing: set) -> str:
+    if safe_name not in existing:
+        return safe_name
+    stem = Path(safe_name).stem
+    ext = Path(safe_name).suffix
+    candidate = f"{stem}_manual{ext}"
+    if candidate not in existing:
+        return candidate
+    i = 2
+    while True:
+        candidate = f"{stem}_manual_{i}{ext}"
+        if candidate not in existing:
+            return candidate
+        i += 1
 
 
 @router.get("/batch/{batch_id}/preview", response_class=HTMLResponse)
@@ -341,3 +360,126 @@ async def rename_batch_api(request: Request, batch_id: str):
     ok = save_metadata(batch_id, meta)
     log_event(batch_id, "info", f"Партия переименована в: {full_name}")
     return JSONResponse({"ok": ok, "name": full_name, "display_name": new_name})
+
+
+@router.post("/batch/{batch_id}/api/add-image")
+async def add_image(
+    request: Request,
+    batch_id: str,
+    article: str = Form(...),
+    column: str = Form(...),
+    file: UploadFile = File(...),
+):
+    if not is_authenticated(request):
+        return JSONResponse({"ok": False}, status_code=401)
+
+    if column not in ("main", "zoom", "rest"):
+        return JSONResponse({"ok": False, "error": "Неверная колонка"}, status_code=400)
+
+    original_name = file.filename or "image.jpg"
+    ext = Path(original_name).suffix.lower()
+    if ext not in _ALLOWED_IMAGE_EXTS:
+        return JSONResponse({"ok": False, "error": "Неподдерживаемый формат файла"})
+
+    meta = load_metadata(batch_id)
+    if not meta:
+        return JSONResponse({"ok": False, "error": "Партия не найдена"}, status_code=404)
+
+    articles = meta.get("articles", {})
+    if article not in articles:
+        return JSONResponse({"ok": False, "error": "Артикул не найден"}, status_code=404)
+
+    a = articles[article]
+    files_list = a.get("files", [])
+
+    data = await file.read()
+    file_size = len(data)
+
+    safe_name_raw = safe_filename(original_name)
+    if not safe_name_raw or safe_name_raw == ext.lstrip('.') or safe_name_raw == ext:
+        safe_name_raw = f"image{ext}"
+
+    existing_names = {f["safe_name"] for f in files_list}
+    safe_name = _make_manual_filename(safe_name_raw, existing_names)
+
+    # Security: ensure file stays inside batch/article directory
+    article_dir = BATCHES_DIR / batch_id / article
+    article_dir.mkdir(parents=True, exist_ok=True)
+    dest = (article_dir / safe_name).resolve()
+    if not str(dest).startswith(str((BATCHES_DIR / batch_id).resolve())):
+        return JSONResponse({"ok": False, "error": "Недопустимый путь"}, status_code=400)
+
+    with open(dest, "wb") as f_out:
+        f_out.write(data)
+
+    width = height = None
+    file_errors = []
+    try:
+        from PIL import Image as PILImage
+        with PILImage.open(io.BytesIO(data)) as img:
+            width, height = img.size
+    except Exception:
+        file_errors.append("Файл повреждён или не является изображением")
+
+    if file_size > MAX_IMAGE_SIZE_BYTES:
+        file_errors.append("Файл больше 10 MB")
+
+    file_obj = {
+        "safe_name": safe_name,
+        "original_name": original_name,
+        "display_name": original_name,
+        "size": file_size,
+        "width": width,
+        "height": height,
+        "errors": file_errors,
+        "warnings": [],
+    }
+    files_list.append(file_obj)
+    a["files"] = files_list
+
+    assignment = a.setdefault("assignment", {"main": None, "zoom": None, "rest": []})
+    if not isinstance(assignment.get("rest"), list):
+        assignment["rest"] = []
+
+    displaced = None
+    if column == "main":
+        old = assignment.get("main")
+        if old and old != safe_name:
+            displaced = old
+            if old not in assignment["rest"]:
+                assignment["rest"].append(old)
+        assignment["main"] = safe_name
+    elif column == "zoom":
+        old = assignment.get("zoom")
+        if old and old != safe_name:
+            displaced = old
+            if old not in assignment["rest"]:
+                assignment["rest"].append(old)
+        assignment["zoom"] = safe_name
+    else:
+        if safe_name not in assignment["rest"]:
+            assignment["rest"].append(safe_name)
+
+    a["assignment"] = assignment
+
+    stats = meta.setdefault("stats", {})
+    stats["total_images"] = stats.get("total_images", 0) + 1
+    if file_errors:
+        stats["total_errors"] = stats.get("total_errors", 0) + len(file_errors)
+
+    save_metadata(batch_id, meta)
+    generate_preview(batch_id, article, safe_name, force=True)
+    log_event(
+        batch_id, "info",
+        f"Изображение добавлено вручную: {original_name} → {safe_name}",
+        article=article,
+    )
+
+    return JSONResponse({
+        "ok": True,
+        "file": file_obj,
+        "assignment": assignment,
+        "article_data": a,
+        "has_size_error": "Файл больше 10 MB" in file_errors,
+        "displaced": displaced,
+    })
