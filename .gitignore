@@ -47,3 +47,22 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Python
+__pycache__/
+*.pyc
+.env
+.replit.nix
+
+# Runtime / generated data
+artifacts/api-server/data/uploads/
+artifacts/api-server/data/batches/
+artifacts/api-server/data/previews/
+artifacts/api-server/data/exports/
+artifacts/api-server/data/logs/
+artifacts/api-server/data/metadata/
+
+# Binary / generated outputs
+*.zip
+*.csv
+*.log
