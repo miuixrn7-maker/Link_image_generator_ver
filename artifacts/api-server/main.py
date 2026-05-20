@@ -8,7 +8,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from urllib.parse import unquote as _unquote
-from app.config import SESSION_SECRET, PORT, DATA_DIR
+from app.config import SESSION_SECRET, PORT, DATA_DIR, BASE_URL, get_free_disk_space
 from app.routes.auth_routes import router as auth_router
 from app.routes.batch_routes import router as batch_router
 from app.routes.upload_routes import router as upload_router
@@ -61,15 +61,33 @@ app.include_router(settings_router)
 
 @app.on_event("startup")
 async def startup():
-    # Ensure data dirs exist
-    for sub in ["uploads", "batches", "previews", "exports", "logs", "metadata"]:
+    subs = ["uploads", "batches", "previews", "exports", "logs", "metadata"]
+    for sub in subs:
         (DATA_DIR / sub).mkdir(parents=True, exist_ok=True)
-    # Run auto-cleanup
     try:
         from app.cleanup import auto_cleanup
         auto_cleanup()
     except Exception:
         pass
+    _print_startup_diagnostics(subs)
+
+
+def _print_startup_diagnostics(subs: list):
+    free_gb = get_free_disk_space()
+    url = BASE_URL or os.environ.get("REPLIT_DEV_DOMAIN", "(не задан)")
+    lines = [
+        "=" * 52,
+        "  Генератор прямых ссылок — запуск",
+        f"  BASE_URL     : {url}",
+        f"  Диск свободно: {free_gb:.1f} ГБ",
+        "  Папки данных :",
+    ]
+    for sub in subs:
+        d = DATA_DIR / sub
+        status = "OK" if (d.exists() and os.access(d, os.W_OK)) else "ERR"
+        lines.append(f"    {status}  {sub}/")
+    lines.append("=" * 52)
+    print("\n".join(lines), flush=True)
 
 
 if __name__ == "__main__":

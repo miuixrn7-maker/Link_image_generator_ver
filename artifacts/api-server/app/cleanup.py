@@ -22,6 +22,14 @@ def delete_batch(batch_id: str) -> dict:
             else:
                 path.unlink(missing_ok=True)
 
+    def _count_files(path: Path) -> int:
+        if not path.exists():
+            return 0
+        try:
+            return sum(1 for _ in path.rglob("*") if _.is_file())
+        except Exception:
+            return 0
+
     # Delete ZIP
     if meta:
         archive_path = meta.get("archive_path")
@@ -29,15 +37,19 @@ def delete_batch(batch_id: str) -> dict:
             _rm(Path(archive_path))
 
     # Delete extracted files
+    batches_count = _count_files(BATCHES_DIR / batch_id)
     _rm(BATCHES_DIR / batch_id)
 
     # Delete previews
+    previews_count = _count_files(PREVIEWS_DIR / batch_id)
     _rm(PREVIEWS_DIR / batch_id)
 
     # Delete CSV
+    exports_count = 0
     if meta:
         csv_path = meta.get("csv_path")
-        if csv_path:
+        if csv_path and Path(csv_path).exists():
+            exports_count = 1
             _rm(Path(csv_path))
 
     # Delete log
@@ -46,7 +58,16 @@ def delete_batch(batch_id: str) -> dict:
     # Delete metadata (last)
     delete_metadata(batch_id)
 
-    return {"ok": True}
+    parts = []
+    if batches_count:
+        parts.append(f"изображений: {batches_count}")
+    if previews_count:
+        parts.append(f"превью: {previews_count}")
+    if exports_count:
+        parts.append(f"экспортов: {exports_count}")
+    summary = "Партия удалена" + (f" ({', '.join(parts)})" if parts else "")
+
+    return {"ok": True, "deleted_previews": previews_count, "deleted_exports": exports_count, "summary": summary}
 
 
 def auto_cleanup():

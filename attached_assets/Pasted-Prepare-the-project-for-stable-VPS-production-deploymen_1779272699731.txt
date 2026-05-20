@@ -1,0 +1,327 @@
+Prepare the project for stable VPS production deployment before Version 2.
+
+Goal:
+Improve stability, memory usage, cleanup, and large ZIP handling for a VPS with:
+
+* 4 CPU
+* 4 GB RAM
+* 80 GB NVMe
+
+Do NOT redesign the app.
+Do NOT change CSV format.
+Do NOT implement Version 2 presets/settings yet.
+Do NOT add users.
+Do NOT add Docker.
+Focus only on production stability and VPS readiness.
+
+1. LARGE ARCHIVE WARNING SYSTEM
+
+Add archive analysis before extraction.
+
+Goal:
+Warn user when archive may be too large for stable processing.
+
+Do NOT block upload.
+Show warning only.
+
+Analyze:
+
+* ZIP size
+* article count
+* image count
+
+Add configurable thresholds in code constants for now.
+Do NOT create settings UI yet.
+Settings UI will be added later in Version 2.
+
+Temporary constants example:
+WARNING_MAX_ZIP_GB = 3
+WARNING_MAX_ARTICLES = 350
+WARNING_MAX_IMAGES = 900
+
+Behavior:
+If any threshold exceeded:
+show warning modal before extraction:
+
+⚠ Архив может быть слишком большим для стабильной обработки.
+Рекомендуется разделить архив на части.
+
+Размер ZIP: X GB
+Артикулов: X
+Изображений: X
+
+[Продолжить]
+[Отмена]
+
+Implementation:
+
+1. Scan ZIP structure before extraction.
+
+2. Count:
+
+   * supported images
+   * article folders
+   * ZIP size
+
+3. Show warning if thresholds exceeded.
+
+4. Do not extract ZIP twice if possible.
+
+5. Keep processing possible after confirmation.
+
+6. LAZY PREVIEW GENERATION
+
+Current problem:
+Generating all previews immediately is too heavy for VPS RAM and CPU.
+
+Implement lazy preview generation.
+
+Requirements:
+
+1. Do NOT generate all previews immediately after extraction.
+2. Generate preview only when:
+
+   * article card becomes visible
+   * user opens fullscreen
+   * preview is requested
+3. Cache generated previews.
+4. If preview already exists, reuse it.
+5. Generate previews asynchronously if possible.
+6. Avoid duplicate preview generation requests.
+7. Add loading placeholder while preview is generating.
+8. If preview generation fails:
+
+   * show fallback image
+   * add readable warning
+9. Keep original image serving unchanged.
+
+Performance goals:
+
+* reduce RAM spikes
+* reduce CPU spikes
+* reduce extraction time
+* reduce initial preview loading time
+
+3. CLEANUP VERIFICATION
+
+Ensure deletion fully removes all generated files.
+
+When deleting batch:
+must remove:
+
+* original extracted files
+* previews
+* exports
+* temp files
+* metadata
+* logs if batch-specific
+
+Requirements:
+
+1. Verify cleanup actually deletes preview folders.
+
+2. Verify no orphan previews remain.
+
+3. Verify metadata counters update correctly.
+
+4. Add cleanup logging:
+   “Deleted previews: X”
+   “Deleted exports: X”
+
+5. Cleanup must tolerate partially missing files.
+
+6. No crashes if files already deleted.
+
+7. MEMORY / EXTRACTION OPTIMIZATION
+
+Goal:
+Reduce RAM usage for large ZIP processing.
+
+Requirements:
+
+1. Never load entire ZIP into RAM.
+
+2. Continue using streaming extraction.
+
+3. Continue using shutil.copyfileobj or equivalent streaming copy.
+
+4. Avoid reading entire images into memory unless required.
+
+5. Open Pillow images with context manager.
+
+6. Close image handles immediately after metadata extraction.
+
+7. Avoid duplicate scans of extracted directories.
+
+8. Reuse computed metadata where possible.
+
+9. Avoid storing unnecessary in-memory file lists.
+
+10. PREVIEW IMAGE OPTIMIZATION
+
+Goal:
+Prevent fullscreen/original image loading in preview grid.
+
+Requirements:
+
+1. Preview grid must use reduced-size thumbnails only.
+
+2. Full original image should load only:
+
+   * in fullscreen viewer
+   * direct image URL
+
+3. Add max preview dimensions:
+   Example:
+   400x400 or similar.
+
+4. Preserve aspect ratio.
+
+5. Avoid generating unnecessarily large preview thumbnails.
+
+6. LARGE UPLOAD STABILITY
+
+Improve upload robustness for large ZIP files.
+
+Requirements:
+
+1. Upload cancel must work reliably.
+
+2. Retry upload must fully reset previous failed upload state.
+
+3. Failed uploads must not leave partial temp files.
+
+4. Add upload timeout handling.
+
+5. Add readable errors:
+
+   * network timeout
+   * corrupted ZIP
+   * extraction failure
+   * disk full
+
+6. Frontend must not duplicate errors after retry.
+
+7. Reset old upload errors when new upload starts.
+
+8. DISK SPACE SAFETY
+
+Goal:
+Avoid VPS disk exhaustion.
+
+Requirements:
+
+1. Before extraction estimate required disk space.
+2. If free disk space dangerously low:
+   show warning:
+
+⚠ Недостаточно свободного места на сервере.
+Рекомендуется удалить старые партии.
+
+3. Continue only after confirmation.
+4. Add helper function:
+   get_free_disk_space()
+
+Approximate estimation acceptable.
+
+8. PRIVATE DEPLOYMENT PROTECTION
+
+This app is private/self-use only.
+
+Add:
+
+1. robots.txt:
+   User-agent: *
+   Disallow: /
+
+2. Global response header:
+   X-Robots-Tag: noindex, nofollow
+
+3. Do not add SEO features.
+
+4. Do not add legal/cookie pages.
+
+5. GITIGNORE VERIFICATION
+
+Ensure .gitignore excludes:
+.env
+uploads/
+batches/
+previews/
+exports/
+logs/
+metadata/
+data/
+*.zip
+
+Goal:
+Prevent massive Git repositories and leaked private data.
+
+10. VPS READINESS CHECK
+
+Add simple startup diagnostics log.
+
+On app startup log:
+
+* BASE_URL
+* writable folders status
+* free disk space
+* preview cleanup settings
+* batch cleanup settings
+
+Readable format.
+
+11. TESTING
+
+After implementation test:
+
+Large archive warning:
+
+* ZIP > threshold
+* image count > threshold
+* article count > threshold
+
+Lazy previews:
+
+* preview generates on demand
+* fullscreen loads original
+* repeated opening reuses preview
+* no duplicate preview generation
+
+Cleanup:
+
+* delete batch removes previews
+* delete batch removes exports
+* no orphan folders remain
+
+Memory:
+
+* large ZIP does not fully load into RAM
+* extraction stable
+
+Upload:
+
+* cancel upload
+* retry upload
+* failed upload cleanup
+* duplicate errors not repeated
+
+Disk:
+
+* low disk warning appears
+
+Git:
+
+* .gitignore excludes generated data
+
+12. FINAL REPORT
+
+After implementation respond in Russian with:
+
+* what was optimized
+* memory improvements
+* preview changes
+* cleanup changes
+* upload stability improvements
+* large archive warning logic
+* remaining known risks for 4 GB RAM VPS

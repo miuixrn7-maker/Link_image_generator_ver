@@ -1,21 +1,85 @@
 import threading
 import time
+import zipfile
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from pathlib import Path
 
-from app.auth import is_authenticated, current_user
-from app.config import UPLOADS_DIR
+from app.auth import is_authenticated
+from app.config import (
+    SUPPORTED_IMAGES,
+    WARNING_MAX_ZIP_GB, WARNING_MAX_ARTICLES, WARNING_MAX_IMAGES,
+    get_free_disk_space,
+)
 from app.metadata import load_metadata, save_metadata
 from app.extractor import extract_zip
 from app.logger_utils import log_event
-from app.preview_gen import generate_all_previews
 
 from app.templates import templates
 router = APIRouter()
 
-# In-memory extraction progress store
 _extraction_progress: dict[str, dict] = {}
+
+
+@router.post("/batch/{batch_id}/api/analyze-zip")
+async def analyze_zip_archive(request: Request, batch_id: str):
+    if not is_authenticated(request):
+        return JSONResponse({"ok": False}, status_code=401)
+    meta = load_metadata(batch_id)
+    if not meta:
+        return JSONResponse({"ok": False}, status_code=404)
+    archive_path = meta.get("archive_path")
+    if not archive_path or not Path(archive_path).exists():
+        return JSONResponse({"ok": False, "error": "Архив не найден"})
+
+    zip_path = Path(archive_path)
+    zip_size = zip_path.stat().st_size
+    zip_gb = zip_size / (1024 ** 3)
+
+    article_count = 0
+    image_count = 0
+    try:
+        with zipfile.ZipFile(zip_path, "r") as zf:
+            article_paths: set = set()
+            for info in zf.infolist():
+                if info.is_dir():
+                    continue
+                parts = info.filename.replace("\\", "/").split("/")
+                ext = Path(parts[-1]).suffix.lower()
+                if ext in SUPPORTED_IMAGES:
+                    image_count += 1
+                    if len(parts) >= 2:
+                        article_paths.add(parts[-2])
+            article_count = len(article_paths)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": f"Ошибка анализа архива: {e}"})
+
+    free_gb = get_free_disk_space()
+    warnings = []
+    if zip_gb >= WARNING_MAX_ZIP_GB:
+        warnings.append(f"Размер ZIP: {zip_gb:.1f} ГБ (рекомендуемый предел {WARNING_MAX_ZIP_GB} ГБ)")
+    if article_count >= WARNING_MAX_ARTICLES:
+        warnings.append(f"Артикулов: {article_count} (рекомендуемый предел {WARNING_MAX_ARTICLES})")
+    if image_count >= WARNING_MAX_IMAGES:
+        warnings.append(f"Изображений: {image_count} (рекомендуемый предел {WARNING_MAX_IMAGES})")
+    low_disk = free_gb < max(zip_gb * 2.5 + 0.5, 1.0)
+    if low_disk:
+        warnings.append(
+            f"Мало свободного места: {free_gb:.1f} ГБ "
+            f"(рекомендуется {max(zip_gb*2.5+0.5, 1.0):.1f} ГБ)"
+        )
+
+    return JSONResponse({
+        "ok": True,
+        "zip_gb": round(zip_gb, 2),
+        "zip_size": zip_size,
+        "article_count": article_count,
+        "image_count": image_count,
+        "free_gb": round(free_gb, 2),
+        "warnings": warnings,
+        "needs_warning": len(warnings) > 0,
+        "low_disk": low_disk,
+    })
 
 
 @router.post("/batch/{batch_id}/extract")
@@ -39,8 +103,6 @@ async def start_extraction(request: Request, batch_id: str):
         "phase": "scan",
         "articles_done": 0,
         "articles_total": 0,
-        "previews_done": 0,
-        "previews_total": 0,
         "start_time": time.time(),
         "elapsed": 0,
     }
@@ -56,28 +118,19 @@ async def start_extraction(request: Request, batch_id: str):
                 p["articles_total"] = articles_total
             if pct < 50:
                 p["phase"] = "scan"
-            elif pct < 96:
+            elif pct < 100:
                 p["phase"] = "extract"
 
         try:
             result = extract_zip(batch_id, Path(archive_path), progress_cb=progress_cb)
             _extraction_progress[batch_id]["result"] = result
-            if result["ok"]:
-                _extraction_progress[batch_id]["phase"] = "previews"
-                meta2 = load_metadata(batch_id)
-                if meta2:
-                    def preview_cb(done, total):
-                        p = _extraction_progress[batch_id]
-                        p["previews_done"] = done
-                        p["previews_total"] = total
-                        p["elapsed"] = round(time.time() - p["start_time"], 1)
-                    generate_all_previews(batch_id, meta2.get("articles", {}), progress_cb=preview_cb)
-                    log_event(batch_id, "info", "Превью созданы")
             p = _extraction_progress[batch_id]
             p["progress"] = 100
             p["done"] = True
             p["phase"] = "done"
             p["elapsed"] = round(time.time() - p["start_time"], 1)
+            if result.get("ok"):
+                log_event(batch_id, "info", "Распаковка завершена. Превью создаются по запросу.")
         except Exception as e:
             p = _extraction_progress[batch_id]
             p["error"] = str(e)
@@ -112,13 +165,6 @@ async def extraction_progress(request: Request, batch_id: str):
             status_msg = f"Распаковано {adone} из {atotal} артикулов..."
         else:
             status_msg = "Обработка изображений..."
-    elif phase == "previews":
-        pdone = prog.get("previews_done", 0)
-        ptotal = prog.get("previews_total", 0)
-        if ptotal:
-            status_msg = f"Создание превью {pdone} из {ptotal}..."
-        else:
-            status_msg = "Создание превью..."
     elif phase == "done":
         status_msg = "Готово"
     else:

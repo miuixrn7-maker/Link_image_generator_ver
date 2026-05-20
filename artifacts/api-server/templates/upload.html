@@ -87,6 +87,24 @@
   {% endif %}
 </div>
 
+<!-- Archive size warning modal -->
+<div id="archive-warning-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center" onclick="if(event.target===this)closeArchiveWarning()">
+  <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4" onclick="event.stopPropagation()">
+    <div class="flex items-start gap-3 mb-4">
+      <div class="text-yellow-500 text-2xl shrink-0">⚠</div>
+      <div>
+        <h3 class="font-semibold text-gray-800 mb-1">Архив может быть слишком большим для стабильной обработки</h3>
+        <p class="text-sm text-gray-500">Рекомендуется разделить архив на части.</p>
+      </div>
+    </div>
+    <div id="archive-warning-stats" class="bg-gray-50 rounded-lg px-4 py-3 text-sm mb-4"></div>
+    <div class="flex gap-3">
+      <button onclick="confirmExtraction()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg">Продолжить</button>
+      <button onclick="closeArchiveWarning()" class="px-4 py-2 border border-gray-300 text-sm rounded-lg text-gray-600 hover:bg-gray-50">Отмена</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const BATCH_ID = '{{ batch.id }}';
 const SLOW_THRESHOLD = 1 * 1024 * 1024 * 1024; // 1 ГБ/с
@@ -267,7 +285,52 @@ async function deleteArchive() {
 }
 
 let extractPollInterval = null;
+
 async function startExtraction() {
+  document.getElementById('after-upload').classList.add('hidden');
+  document.getElementById('extraction-section').classList.remove('hidden');
+  document.getElementById('extract-spinner').classList.remove('hidden');
+  document.getElementById('extract-check').classList.add('hidden');
+  document.getElementById('extract-status-text').textContent = 'Анализ архива...';
+
+  try {
+    const ar = await fetch('/batch/' + BATCH_ID + '/api/analyze-zip', {method: 'POST'});
+    const ad = await ar.json();
+    if (ad.ok && ad.needs_warning) {
+      document.getElementById('extraction-section').classList.add('hidden');
+      document.getElementById('after-upload').classList.remove('hidden');
+      showArchiveWarning(ad);
+      return;
+    }
+  } catch(e) { /* non-critical, proceed */ }
+
+  doExtract();
+}
+
+function showArchiveWarning(stats) {
+  const warnings = (stats.warnings || []).map(w => `<div class="text-yellow-700 mb-1">• ${w}</div>`).join('');
+  document.getElementById('archive-warning-stats').innerHTML = `
+    <div class="mb-2 text-xs">${warnings}</div>
+    <div class="text-xs text-gray-500 border-t border-gray-200 pt-2 space-y-0.5">
+      <div>Размер ZIP: ${fmtSize(stats.zip_size || 0)}</div>
+      <div>Артикулов: ${stats.article_count || 0}</div>
+      <div>Изображений: ${stats.image_count || 0}</div>
+      <div>Свободно на диске: ${(stats.free_gb || 0).toFixed(1)} ГБ</div>
+    </div>`;
+  document.getElementById('archive-warning-modal').classList.remove('hidden');
+}
+
+function closeArchiveWarning() {
+  document.getElementById('archive-warning-modal').classList.add('hidden');
+  document.getElementById('after-upload').classList.remove('hidden');
+}
+
+function confirmExtraction() {
+  document.getElementById('archive-warning-modal').classList.add('hidden');
+  doExtract();
+}
+
+async function doExtract() {
   document.getElementById('after-upload').classList.add('hidden');
   document.getElementById('extraction-section').classList.remove('hidden');
   document.getElementById('extract-spinner').classList.remove('hidden');

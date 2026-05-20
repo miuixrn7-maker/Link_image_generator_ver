@@ -24,7 +24,20 @@ SUPPORTED_IMAGES = {".jpg", ".jpeg", ".png", ".webp"}
 SYSTEM_FILES = {".ds_store", "thumbs.db", "__macosx"}
 MAX_IMAGE_SIZE_MB = 10
 MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024
-PREVIEW_MAX_SIDE = 1200
+PREVIEW_MAX_SIDE = 400
 PREVIEW_QUALITY = 82
 BATCH_EXPIRE_DAYS = 14
 PREVIEW_EXPIRE_HOURS = 24
+
+WARNING_MAX_ZIP_GB = 3
+WARNING_MAX_ARTICLES = 350
+WARNING_MAX_IMAGES = 900
+
+
+def get_free_disk_space() -> float:
+    import shutil
+    try:
+        usage = shutil.disk_usage(DATA_DIR)
+        return usage.free / (1024 ** 3)
+    except Exception:
+        return 999.0

@@ -1,6 +1,5 @@
 import zipfile
 import shutil
-import io
 import hashlib
 from pathlib import Path
 from typing import Callable, Optional
@@ -231,20 +230,6 @@ def extract_zip(batch_id: str, zip_path: Path, progress_cb: Optional[Callable] =
                 if ext not in SUPPORTED_IMAGES:
                     continue
 
-                try:
-                    file_data = zf.read(info.filename)
-                except Exception as e:
-                    errors.append(f"Ошибка чтения файла: {filename}: {e}")
-                    log_event(batch_id, "error", f"Ошибка чтения: {filename}", article=display_article)
-                    continue
-
-                file_size = len(file_data)
-
-                if file_size == 0:
-                    errors.append(f"Файл пустой (0 байт): {filename}")
-                    log_event(batch_id, "error", f"Файл пустой (0 байт): {filename}", article=display_article)
-                    continue
-
                 s_name = safe_filename(filename)
                 original_s_name = s_name
                 if s_name in used_safe_names:
@@ -258,11 +243,23 @@ def extract_zip(batch_id: str, zip_path: Path, progress_cb: Optional[Callable] =
                 used_safe_names.add(s_name)
 
                 dest = article_dir / s_name
+
+                # Stream extraction — never loads entire file into RAM
                 try:
-                    with open(dest, "wb") as f:
-                        f.write(file_data)
+                    with zf.open(info.filename) as src_stream, open(dest, "wb") as f_out:
+                        shutil.copyfileobj(src_stream, f_out, length=65536)
                 except Exception as e:
                     errors.append(f"Ошибка записи файла: {s_name}: {e}")
+                    log_event(batch_id, "error", f"Ошибка записи: {filename}", article=display_article)
+                    dest.unlink(missing_ok=True)
+                    continue
+
+                file_size = dest.stat().st_size
+
+                if file_size == 0:
+                    errors.append(f"Файл пустой (0 байт): {filename}")
+                    log_event(batch_id, "error", f"Файл пустой (0 байт): {filename}", article=display_article)
+                    dest.unlink(missing_ok=True)
                     continue
 
                 file_errors: list = []
@@ -272,8 +269,9 @@ def extract_zip(batch_id: str, zip_path: Path, progress_cb: Optional[Callable] =
                     file_errors.append("Файл больше 10 MB")
                     log_event(batch_id, "error", f"Файл больше 10 MB: {s_name}", article=display_article)
 
+                # Read dimensions from saved file — Pillow loads only header, not pixel data
                 try:
-                    with Image.open(io.BytesIO(file_data)) as img:
+                    with Image.open(dest) as img:
                         width, height = img.size
                 except UnidentifiedImageError:
                     file_errors.append("Файл повреждён или не является изображением")

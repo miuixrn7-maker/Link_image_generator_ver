@@ -70,9 +70,10 @@ artifacts/api-server/
 ## Gotchas
 
 - `configureWorkflow` иногда даёт "failed" даже если сервер запустился — проверять через `getWorkflowStatus`
-- Порт 8080 занят старым Node.js api-server workflow — Python приложение на порту 5000
 - В Starlette 1.0 `TemplateResponse(name, context)` → ошибка; нужно `TemplateResponse(request, name, context)`
 - При развёртывании установить BASE_URL = публичный домен для корректных URL в CSV
+- Не удалять артефактный workflow `artifacts/api-server: API Server` — он управляется artifact.toml; ручной "Start application" удалён во избежание конфликта порта 5000
+- Превью генерируются лениво (по запросу через `/previews/…`); `generate_all_previews` больше не вызывается при распаковке
 
 ## Pointers
 
