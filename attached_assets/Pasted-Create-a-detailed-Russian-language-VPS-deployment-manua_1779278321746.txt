@@ -1,0 +1,219 @@
+Create a detailed Russian-language VPS deployment manual specifically for this project.
+
+Goal:
+Explain step-by-step how to transfer the project from GitHub to a VPS and launch it in production.
+
+Do NOT create generic documentation.
+Write instructions specifically for THIS project structure.
+
+Add:
+README_VPS_DEPLOY_FULL.md
+
+Requirements:
+
+1. Explain from absolute beginner level.
+
+Assume the user:
+
+* has never used VPS before
+* has never used Linux before
+* has never deployed FastAPI before
+
+2. Include full workflow:
+
+SECTIONS:
+
+1. Что нужно купить
+
+* VPS
+* optional domain
+* recommended VPS specs for this project
+
+2. Рекомендуемые VPS характеристики
+
+Include project-specific recommendations:
+
+🟢 Комфортно:
+500–700 изображений
+до 2 GB ZIP
+
+🟡 Желательно делить:
+800–1200 изображений
+или 3 GB+
+
+🔴 Обязательно делить:
+1500+ изображений
+или 4–5 GB+
+
+Recommended VPS:
+4 CPU
+4 GB RAM
+80 GB NVMe
+
+3. Что пользователь получит после покупки VPS
+
+* IP
+* root login
+* password
+
+4. Как подключиться к VPS
+   Windows:
+
+* PuTTY
+  OR
+* Windows Terminal + ssh
+
+Mac/Linux:
+
+* terminal ssh
+
+5. Первичная настройка Ubuntu
+
+Commands:
+
+* apt update
+* apt upgrade
+* install git
+* install python
+* install nginx
+* install certbot
+
+6. Как клонировать проект с GitHub
+
+Commands:
+git clone
+cd project
+
+7. Как создать virtualenv
+
+Commands:
+python3 -m venv venv
+source venv/bin/activate
+
+8. Как установить зависимости
+
+pip install -r requirements.txt
+
+9. Как создать .env
+
+Explain each variable:
+
+* ADMIN_LOGIN
+* ADMIN_PASSWORD
+* SESSION_SECRET
+* BASE_URL
+
+10. Как запустить проект вручную
+
+uvicorn command
+
+11. Как проверить что сайт работает
+
+12. Как настроить systemd
+
+Explain:
+
+* what systemd is
+* why it is needed
+* how to restart service
+* how to view logs
+
+Commands:
+systemctl status
+restart
+enable
+journalctl
+
+13. Как настроить nginx
+
+Explain:
+
+* reverse proxy
+* large ZIP uploads
+* client_max_body_size
+
+14. Как подключить домен
+
+15. Как включить HTTPS
+
+certbot instructions
+
+16. Как обновлять проект позже
+
+git pull
+restart service
+
+17. Как делать резервные копии
+
+Important folders:
+
+* metadata
+* settings
+* presets
+* exports
+
+18. Как очистить VPS
+
+Explain built-in cleanup tools.
+
+19. Частые ошибки
+
+Examples:
+
+* port already in use
+* nginx 413 upload too large
+* permission denied
+* no space left on device
+* previews not generating
+* BASE_URL incorrect
+* service failed to start
+
+20. Полезные команды Linux
+
+Examples:
+
+* df -h
+* du -sh
+* ls
+* cd
+* nano
+* rm
+
+3. IMPORTANT REQUIREMENTS
+
+4. Use real paths from this project:
+   artifacts/api-server/main.py
+
+5. Use real startup command:
+   uvicorn main:app --host 127.0.0.1 --port 5000
+
+6. Explain commands line-by-line.
+
+7. Add comments for dangerous commands.
+
+8. Keep guide beginner-friendly.
+
+9. OPTIONAL
+
+If possible:
+
+* add diagrams
+* add troubleshooting table
+* add VPS architecture explanation
+
+5. DOWNLOADABLE FORMATS
+
+If easy:
+also generate:
+
+* PDF
+* DOCX
+
+6. FINAL REPORT
+
+After implementation respond in Russian with:
+
+* where deployment guide is stored
+* what formats are available
+* how to update instructions later
+* what deployment steps are covered
