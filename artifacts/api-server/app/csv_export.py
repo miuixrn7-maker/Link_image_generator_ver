@@ -44,7 +44,7 @@ def generate_csv(batch_id: str, base_url: str) -> dict:
 
     output = io.StringIO()
     writer = csv.writer(output, delimiter=';', quoting=csv.QUOTE_ALL)
-    writer.writerow(["Артикул", "Путь", "Главная", "Увелич_фото", "Остальные_фото"])
+    writer.writerow(["Артикул", "Путь", "Главная", "Увелич_фото", "Остальные_фото", "Ошибки"])
 
     rows_written = 0
     for article_id, article in sorted(articles.items()):
@@ -66,7 +66,16 @@ def generate_csv(batch_id: str, base_url: str) -> dict:
             build_image_url(batch_id, article_id, f, resolved_base) for f in rest_files
         )
 
-        writer.writerow([display_article, source_path, main_url, zoom_url, rest_urls])
+        article_errors = article.get("errors", [])
+        file_errors = [
+            err
+            for f in article.get("files", [])
+            for err in f.get("errors", [])
+        ]
+        all_errors = article_errors + file_errors
+        errors_cell = "; ".join(all_errors) if all_errors else ""
+
+        writer.writerow([display_article, source_path, main_url, zoom_url, rest_urls, errors_cell])
         rows_written += 1
 
     csv_content = '\ufeff' + output.getvalue()

@@ -499,21 +499,8 @@ function switchTab(tab) {
 }
 
 // ─── Transliteration ─────────────────────────────────────────────────────────
-const TRANSLIT_MAP = {
-  'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z',
-  'и':'i','й':'j','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r',
-  'с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh',
-  'щ':'shch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya',
-  'А':'A','Б':'B','В':'V','Г':'G','Д':'D','Е':'E','Ё':'Yo','Ж':'Zh','З':'Z',
-  'И':'I','Й':'J','К':'K','Л':'L','М':'M','Н':'N','О':'O','П':'P','Р':'R',
-  'С':'S','Т':'T','У':'U','Ф':'F','Х':'Kh','Ц':'Ts','Ч':'Ch','Ш':'Sh',
-  'Щ':'Shch','Ъ':'','Ы':'Y','Ь':'','Э':'E','Ю':'Yu','Я':'Ya',
-  ' ':'-',
-};
-
-function transliterate(text) {
-  return text.split('').map(c => TRANSLIT_MAP[c] !== undefined ? TRANSLIT_MAP[c] : c).join('');
-}
+// No client-side transliteration — values are computed server-side via
+// the same safe_filename() used during extraction (single source of truth).
 
 let ALL_ARTICLES = [];
 
@@ -538,13 +525,12 @@ async function loadTranslit() {
 function renderTranslit(articles) {
   const tbody = document.getElementById('translit-tbody');
   tbody.innerHTML = articles.map(a => {
-    const tr = transliterate(a.display);
-    const isSame = tr === a.display;
-    return `<tr class="translit-row hover:bg-gray-50" data-orig="${a.display.toLowerCase()}">
-      <td class="px-4 py-2 text-gray-700 font-mono">${escHtml(a.display)}</td>
-      <td class="px-4 py-2 font-mono ${isSame ? 'text-gray-400' : 'text-gray-800'}">${escHtml(tr)}</td>
+    const isSame = a.transliterated === a.original;
+    return `<tr class="translit-row hover:bg-gray-50" data-orig="${escAttr(a.original.toLowerCase())}">
+      <td class="px-4 py-2 text-gray-700 font-mono">${escHtml(a.original)}</td>
+      <td class="px-4 py-2 font-mono ${isSame ? 'text-gray-400' : 'text-gray-800'}">${escHtml(a.transliterated)}</td>
       <td class="px-3 py-2 text-right">
-        <button onclick="copyRow('${escAttr(tr)}')"
+        <button onclick="copyRow('${escAttr(a.transliterated)}')"
           class="text-[10px] text-gray-400 hover:text-blue-600 border border-gray-200 hover:border-blue-300 px-2 py-0.5 rounded transition-colors">
           Копировать
         </button>
@@ -556,7 +542,7 @@ function renderTranslit(articles) {
 function filterTranslit(query) {
   const q = query.toLowerCase().trim();
   if (!q) { renderTranslit(ALL_ARTICLES); return; }
-  renderTranslit(ALL_ARTICLES.filter(a => a.display.toLowerCase().includes(q)));
+  renderTranslit(ALL_ARTICLES.filter(a => a.original.toLowerCase().includes(q)));
 }
 
 function copyRow(text) {
@@ -569,7 +555,7 @@ function copyRow(text) {
 }
 
 function copyAllTranslit() {
-  const rows = ALL_ARTICLES.map(a => `${a.display}\t${transliterate(a.display)}`).join('\n');
+  const rows = ALL_ARTICLES.map(a => `${a.original}\t${a.transliterated}`).join('\n');
   navigator.clipboard.writeText(rows).catch(() => {
     const ta = document.createElement('textarea');
     ta.value = rows; document.body.appendChild(ta);

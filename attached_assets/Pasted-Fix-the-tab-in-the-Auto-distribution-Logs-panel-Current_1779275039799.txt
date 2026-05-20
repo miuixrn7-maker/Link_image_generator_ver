@@ -1,0 +1,125 @@
+Fix the “Транслитерация” tab in the Auto-distribution → Logs panel.
+
+Current problem:
+The transliteration shown in the “Транслитерация” tab is incorrect/inconsistent.
+
+The correct transliteration already exists elsewhere:
+
+* “Полные логи” section displays transliteration correctly
+* but “Транслитерация” tab displays different/wrong values
+
+Goal:
+The “Транслитерация” tab must display exactly the same transliteration logic/results as the actual extraction/log processing.
+
+Preferred solution:
+Rebuild the transliteration tab logic from scratch using the existing normalized/transliterated values already generated during extraction.
+
+Do NOT maintain a second independent transliteration implementation.
+
+Required behavior:
+
+1. Single source of truth
+
+The transliteration tab must use:
+
+* already generated normalized article names
+  OR
+* already stored transliteration metadata
+
+Do NOT re-transliterate article names again in frontend JS.
+
+Do NOT duplicate transliteration logic.
+
+2. Correct displayed values
+
+For every article show:
+
+* original article name
+* actual transliterated article name used internally by the app
+
+The value must exactly match:
+
+* extraction logs
+* generated paths
+* CSV paths
+* internal normalized names
+
+3. Rebuild backend endpoint if needed
+
+Current endpoint:
+POST/GET /batch/{id}/api/articles
+
+If needed:
+
+* rebuild endpoint
+* return clean structured data
+
+Suggested response:
+[
+{
+"original": "Вид картины",
+"transliterated": "vid_kartiny"
+}
+]
+
+4. Use existing extraction metadata
+
+If transliteration already happens during extraction:
+
+* save transliterated value in metadata
+* reuse it in transliteration tab
+
+Do NOT recompute transliteration separately.
+
+5. Fix inconsistencies
+
+The transliteration tab must follow the same rules as extraction:
+
+* spaces
+* underscores
+* hyphens
+* case normalization
+* Cyrillic mapping
+* symbol removal
+* duplicate handling
+
+Everything must match actual stored/generated filenames.
+
+6. UI requirements
+
+Keep current UI:
+
+* filter
+* copy buttons
+* copy all
+* tabs
+
+Only fix the data source and correctness.
+
+7. Testing
+
+Test examples:
+Вид картины.png
+Картины по номерам
+Ёжик
+Щука
+Объём
+Тест №1
+
+Verify:
+
+* transliteration tab
+* extraction logs
+* actual generated filenames
+* CSV paths
+
+must all match exactly.
+
+8. Final report
+
+After fix respond in Russian with:
+
+* what caused inconsistency
+* what data source is now used
+* whether frontend transliteration was removed
+* how consistency is guaranteed now

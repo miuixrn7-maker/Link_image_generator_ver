@@ -8,6 +8,7 @@ from app.metadata import load_metadata, save_metadata
 from app.distributor import run_auto_distribution
 from app.logger_utils import get_log
 from app.presets_manager import load_presets
+from app.utils import safe_filename
 
 from app.templates import templates
 router = APIRouter()
@@ -94,8 +95,9 @@ async def get_articles_api(request: Request, batch_id: str):
     if not meta:
         return JSONResponse({"ok": False, "error": "Партия не найдена"})
     articles_data = meta.get("articles", {})
-    articles = [
-        {"name": name, "display": data.get("display_article", name)}
-        for name, data in articles_data.items()
-    ]
+    articles = []
+    for name, data in sorted(articles_data.items()):
+        original = data.get("display_article", name)
+        transliterated = safe_filename(original)
+        articles.append({"original": original, "transliterated": transliterated})
     return JSONResponse({"ok": True, "articles": articles})
