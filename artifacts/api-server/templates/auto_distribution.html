@@ -231,12 +231,12 @@
         <table class="w-full text-xs">
           <thead class="bg-gray-50 border-b border-gray-100 sticky top-0">
             <tr>
-              <th class="text-left px-4 py-2.5 font-semibold text-gray-500 uppercase tracking-wide w-1/2">Артикул</th>
-              <th class="text-left px-4 py-2.5 font-semibold text-gray-500 uppercase tracking-wide w-1/2">Транслитерация</th>
+              <th class="text-left px-4 py-2.5 font-semibold text-gray-500 uppercase tracking-wide">Оригинал</th>
+              <th class="text-left px-4 py-2.5 font-semibold text-gray-500 uppercase tracking-wide">Транслитерация</th>
               <th class="px-3 py-2.5 w-10"></th>
             </tr>
           </thead>
-          <tbody id="translit-tbody" class="divide-y divide-gray-100"></tbody>
+          <tbody id="translit-tbody"></tbody>
         </table>
       </div>
     </div>
@@ -524,25 +524,61 @@ async function loadTranslit() {
 
 function renderTranslit(articles) {
   const tbody = document.getElementById('translit-tbody');
-  tbody.innerHTML = articles.map(a => {
-    const isSame = a.transliterated === a.original;
-    return `<tr class="translit-row hover:bg-gray-50" data-orig="${escAttr(a.original.toLowerCase())}">
-      <td class="px-4 py-2 text-gray-700 font-mono">${escHtml(a.original)}</td>
-      <td class="px-4 py-2 font-mono ${isSame ? 'text-gray-400' : 'text-gray-800'}">${escHtml(a.transliterated)}</td>
+  const rows = [];
+  for (const a of articles) {
+    const artSame = a.transliterated === a.original;
+    // Article row
+    rows.push(`<tr class="bg-gray-50 border-t border-gray-200">
+      <td class="px-3 py-2 font-mono text-gray-700 flex items-center gap-1.5">
+        <svg class="shrink-0 text-gray-400" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <span class="font-semibold">${escHtml(a.original)}</span>
+      </td>
+      <td class="px-3 py-2 font-mono ${artSame ? 'text-gray-400' : 'text-gray-800 font-semibold'}">${escHtml(a.transliterated)}</td>
       <td class="px-3 py-2 text-right">
         <button onclick="copyRow('${escAttr(a.transliterated)}')"
           class="text-[10px] text-gray-400 hover:text-blue-600 border border-gray-200 hover:border-blue-300 px-2 py-0.5 rounded transition-colors">
           Копировать
         </button>
       </td>
-    </tr>`;
-  }).join('');
+    </tr>`);
+    // File sub-rows
+    for (const f of (a.files || [])) {
+      const fileSame = f.transliterated === f.original;
+      rows.push(`<tr class="border-t border-gray-100 hover:bg-blue-50/30">
+        <td class="pl-8 pr-3 py-1.5 font-mono text-gray-500 flex items-center gap-1.5">
+          <svg class="shrink-0 text-gray-300" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span>${escHtml(f.original)}</span>
+        </td>
+        <td class="px-3 py-1.5 font-mono ${fileSame ? 'text-gray-400' : 'text-gray-700'}">${escHtml(f.transliterated)}</td>
+        <td class="px-3 py-1.5 text-right">
+          <button onclick="copyRow('${escAttr(f.transliterated)}')"
+            class="text-[10px] text-gray-300 hover:text-blue-600 border border-gray-100 hover:border-blue-300 px-2 py-0.5 rounded transition-colors">
+            Копировать
+          </button>
+        </td>
+      </tr>`);
+    }
+  }
+  tbody.innerHTML = rows.join('');
 }
 
 function filterTranslit(query) {
   const q = query.toLowerCase().trim();
   if (!q) { renderTranslit(ALL_ARTICLES); return; }
-  renderTranslit(ALL_ARTICLES.filter(a => a.original.toLowerCase().includes(q)));
+  const filtered = ALL_ARTICLES
+    .map(a => {
+      if (a.original.toLowerCase().includes(q) || a.transliterated.toLowerCase().includes(q)) {
+        return a; // show article + all its files
+      }
+      // show article only if any file matches
+      const matchedFiles = (a.files || []).filter(
+        f => f.original.toLowerCase().includes(q) || f.transliterated.toLowerCase().includes(q)
+      );
+      if (matchedFiles.length) return { ...a, files: matchedFiles };
+      return null;
+    })
+    .filter(Boolean);
+  renderTranslit(filtered);
 }
 
 function copyRow(text) {
@@ -555,10 +591,17 @@ function copyRow(text) {
 }
 
 function copyAllTranslit() {
-  const rows = ALL_ARTICLES.map(a => `${a.original}\t${a.transliterated}`).join('\n');
-  navigator.clipboard.writeText(rows).catch(() => {
+  const lines = [];
+  for (const a of ALL_ARTICLES) {
+    lines.push(`${a.original}\t${a.transliterated}`);
+    for (const f of (a.files || [])) {
+      lines.push(`  ${f.original}\t${f.transliterated}`);
+    }
+  }
+  const text = lines.join('\n');
+  navigator.clipboard.writeText(text).catch(() => {
     const ta = document.createElement('textarea');
-    ta.value = rows; document.body.appendChild(ta);
+    ta.value = text; document.body.appendChild(ta);
     ta.select(); document.execCommand('copy');
     document.body.removeChild(ta);
   });

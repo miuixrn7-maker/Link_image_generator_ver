@@ -99,5 +99,16 @@ async def get_articles_api(request: Request, batch_id: str):
     for name, data in sorted(articles_data.items()):
         original = data.get("display_article", name)
         transliterated = safe_filename(original)
-        articles.append({"original": original, "transliterated": transliterated})
+        files = [
+            {
+                "original": f.get("display_name") or f.get("original_name", ""),
+                "transliterated": f.get("safe_name", ""),
+            }
+            for f in data.get("files", [])
+        ]
+        articles.append({
+            "original": original,
+            "transliterated": transliterated,
+            "files": files,
+        })
     return JSONResponse({"ok": True, "articles": articles})
