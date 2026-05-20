@@ -1,0 +1,17 @@
+[Unit]
+Description=Link Image Generator (FastAPI)
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/linkgen/artifacts/api-server
+EnvironmentFile=/var/www/linkgen/.env
+ExecStart=/var/www/linkgen/venv/bin/uvicorn main:app --host 127.0.0.1 --port 5000
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

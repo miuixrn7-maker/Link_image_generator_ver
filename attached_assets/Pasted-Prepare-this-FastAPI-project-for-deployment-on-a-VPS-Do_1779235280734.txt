@@ -1,0 +1,112 @@
+Prepare this FastAPI project for deployment on a VPS.
+
+Do not change application business logic.
+Do not redesign the app.
+Only add deployment files and clear instructions.
+
+Add/check:
+
+1. requirements.txt
+
+* Include all Python dependencies required to run the app.
+* Prefer using requirements.txt instead of manual pip install commands.
+
+2. .env.example
+   Include:
+   ADMIN_LOGIN=admin
+   ADMIN_PASSWORD=change_me
+   SESSION_SECRET=change_me_random_long_string
+   BASE_URL=https://your-domain.ru
+
+3. README_DEPLOY.md
+   Write clear Ubuntu VPS deployment instructions in Russian:
+
+* install Python, venv, pip, git, nginx
+* clone repo
+* create virtualenv
+* install requirements
+* create .env
+* create required folders
+* set permissions
+* run app manually for test
+* configure systemd
+* configure nginx
+* configure HTTPS via Certbot
+* update project from GitHub later
+
+4. systemd service example
+   Add file:
+   deploy/linkgen.service.example
+
+Important:
+WorkingDirectory must match the real folder where main.py is located.
+
+If main.py is in project root, use project root.
+If main.py is in artifacts/api-server, use artifacts/api-server.
+
+Use port 5000 or 8000 consistently.
+
+5. nginx config example
+   Add file:
+   deploy/nginx-linkgen.conf.example
+
+Requirements:
+
+* reverse proxy to local uvicorn app
+* client_max_body_size 500M
+* preserve Host header
+* support large ZIP uploads
+
+6. Required folders and permissions
+   Document which folders need write permissions:
+   uploads/
+   batches/
+   previews/
+   exports/
+   logs/
+   metadata/
+   data/
+
+7. Production start command
+   Document exact command based on real project structure:
+   uvicorn main:app --host 127.0.0.1 --port 5000
+
+8. BASE_URL
+   Explain:
+   BASE_URL must be set to the final domain, for example:
+   https://your-domain.ru
+
+Without BASE_URL, CSV image links may be incorrect.
+
+9. Security notes
+
+* never commit .env
+* add .env to .gitignore
+* generated files should not be committed:
+  uploads/
+  batches/
+  previews/
+  exports/
+  logs/
+  metadata/
+  data/
+
+10. Test after deployment
+    Add checklist:
+
+* login works
+* upload ZIP works
+* extraction works
+* preview opens
+* CSV generates
+* image links from CSV open directly in browser
+* delete batch works
+* logs are written
+
+After adding these files, report in Russian:
+
+* what files were added
+* where main.py is located
+* correct WorkingDirectory
+* correct uvicorn command
+* required environment variables
