@@ -99,6 +99,95 @@
       </div>
     </div>
 
+    <!-- C. Контроль хранилища VPS -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-5">
+      <h2 class="font-semibold text-gray-800 mb-5">Контроль хранилища VPS</h2>
+
+      <div class="mb-5">
+        <div class="tooltip-wrap mb-2">
+          <span class="text-sm font-medium text-gray-700">Размер SSD VPS</span>
+          <span class="tip-icon">?</span>
+          <div class="tip">Используется для расчёта предупреждений о нехватке свободного места.</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="number" name="vps_total_gb" min="1" max="10000"
+            value="{{ settings.vps_total_gb if settings.vps_total_gb is not none else 80 }}"
+            class="w-24 text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+          <span class="text-sm text-gray-500">ГБ</span>
+        </div>
+      </div>
+
+      <div class="mb-5 border-t border-gray-100 pt-5">
+        <div class="tooltip-wrap mb-2">
+          <span class="text-sm font-medium text-gray-700">Порог предупреждения свободного места</span>
+          <span class="tip-icon">?</span>
+          <div class="tip">Если свободного места останется меньше указанного значения — приложение покажет предупреждение.</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="number" name="warn_free_gb" min="1" max="1000"
+            value="{{ settings.warn_free_gb if settings.warn_free_gb is not none else 15 }}"
+            class="w-24 text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+          <span class="text-sm text-gray-500">ГБ</span>
+        </div>
+      </div>
+
+      <div class="mb-5 border-t border-gray-100 pt-5">
+        <div class="tooltip-wrap mb-2">
+          <span class="text-sm font-medium text-gray-700">Предупреждать о большом архиве</span>
+          <span class="tip-icon">?</span>
+          <div class="tip">Показывает предупреждение если архив может быть слишком большим для стабильной обработки.</div>
+        </div>
+        <label class="flex items-center gap-2 text-sm cursor-pointer">
+          <input type="checkbox" name="warn_large_archive" value="on"
+            {% if settings.warn_large_archive != False %}checked{% endif %}
+            class="w-4 h-4 accent-blue-600"/>
+          Включено
+        </label>
+      </div>
+
+      <div class="mb-5 border-t border-gray-100 pt-5">
+        <div class="tooltip-wrap mb-2">
+          <span class="text-sm font-medium text-gray-700">Порог размера ZIP</span>
+          <span class="tip-icon">?</span>
+          <div class="tip">Если ZIP архив больше указанного размера — приложение покажет предупреждение.</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="number" name="warn_zip_gb" min="1" max="100"
+            value="{{ settings.warn_zip_gb if settings.warn_zip_gb is not none else 3 }}"
+            class="w-24 text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+          <span class="text-sm text-gray-500">ГБ</span>
+        </div>
+      </div>
+
+      <div class="mb-5 border-t border-gray-100 pt-5">
+        <div class="tooltip-wrap mb-2">
+          <span class="text-sm font-medium text-gray-700">Порог количества артикулов</span>
+          <span class="tip-icon">?</span>
+          <div class="tip">Если архив содержит слишком много артикулов — приложение покажет предупреждение.</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="number" name="warn_max_articles" min="1" max="10000"
+            value="{{ settings.warn_max_articles if settings.warn_max_articles is not none else 350 }}"
+            class="w-28 text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+          <span class="text-sm text-gray-500">артикулов</span>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-100 pt-5">
+        <div class="tooltip-wrap mb-2">
+          <span class="text-sm font-medium text-gray-700">Порог количества изображений</span>
+          <span class="tip-icon">?</span>
+          <div class="tip">Если архив содержит слишком много изображений — приложение покажет предупреждение.</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="number" name="warn_max_images" min="1" max="100000"
+            value="{{ settings.warn_max_images if settings.warn_max_images is not none else 900 }}"
+            class="w-28 text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+          <span class="text-sm text-gray-500">изображений</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Buttons -->
     <div class="flex gap-3">
       <button type="submit"

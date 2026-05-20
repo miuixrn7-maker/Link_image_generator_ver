@@ -1,12 +1,15 @@
 from fastapi import APIRouter, Request, Form
-from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, JSONResponse
 
 from pathlib import Path
 
 from app.auth import is_authenticated, current_user
 from app.metadata import list_all_batches, load_metadata, save_metadata
 from app.logger_utils import get_log
-from app.cleanup import delete_batch
+from app.cleanup import (
+    delete_batch, get_total_storage_usage,
+    cleanup_all_data, cleanup_previews_only, cleanup_exports_only,
+)
 
 from app.templates import templates
 router = APIRouter()
@@ -73,6 +76,39 @@ async def rename_batch(request: Request, batch_id: str, new_name: str = Form(...
     from app.logger_utils import log_event
     log_event(batch_id, "info", f"Партия переименована в: {full_name}")
     return RedirectResponse(url="/history", status_code=302)
+
+
+@router.get("/api/storage")
+async def storage_info(request: Request):
+    if not is_authenticated(request):
+        return JSONResponse({"ok": False}, status_code=401)
+    from app.settings_manager import get_setting
+    usage = get_total_storage_usage()
+    warn_free_gb = float(get_setting("warn_free_gb") or 15)
+    usage["warn_free_gb"] = warn_free_gb
+    usage["low_disk"] = usage["free_gb"] < warn_free_gb
+    return JSONResponse({"ok": True, **usage})
+
+
+@router.post("/api/cleanup/all")
+async def cleanup_all_route(request: Request):
+    if not is_authenticated(request):
+        return JSONResponse({"ok": False}, status_code=401)
+    return JSONResponse(cleanup_all_data())
+
+
+@router.post("/api/cleanup/previews")
+async def cleanup_previews_route(request: Request):
+    if not is_authenticated(request):
+        return JSONResponse({"ok": False}, status_code=401)
+    return JSONResponse(cleanup_previews_only())
+
+
+@router.post("/api/cleanup/exports")
+async def cleanup_exports_route(request: Request):
+    if not is_authenticated(request):
+        return JSONResponse({"ok": False}, status_code=401)
+    return JSONResponse(cleanup_exports_only())
 
 
 @router.post("/batch/{batch_id}/delete")

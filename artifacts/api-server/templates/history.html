@@ -2,12 +2,70 @@
 {% block title %}История партий{% endblock %}
 {% block page_title %}История партий{% endblock %}
 {% block content %}
+
 {% if request.query_params.get('deleted') %}
 <div class="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">
   Партия удалена. Ссылки из CSV больше не работают.
 </div>
 {% endif %}
 
+<!-- Low disk warning (shown via JS) -->
+<div id="low-disk-warning" class="hidden mb-4 bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3">
+  <div class="font-semibold text-yellow-800 text-sm mb-0.5">⚠ На VPS осталось мало свободного места</div>
+  <div id="low-disk-msg" class="text-xs text-yellow-700"></div>
+  <div class="text-xs text-yellow-600 mt-0.5">Рекомендуется удалить старые партии или очистить превью.</div>
+</div>
+
+<!-- Storage info block -->
+<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 mb-4">
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="font-semibold text-gray-800 text-sm">Хранилище VPS</h3>
+    <button onclick="refreshStorage()" class="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 transition-colors">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+        <path d="M21 3v5h-5"/>
+        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+        <path d="M8 16H3v5"/>
+      </svg>
+      Обновить
+    </button>
+  </div>
+  <div id="storage-loading" class="text-xs text-gray-400 py-1">Загрузка данных хранилища...</div>
+  <div id="storage-error" class="hidden text-xs text-red-500 py-1">Ошибка загрузки данных хранилища</div>
+  <div id="storage-content" class="hidden">
+    <div class="mb-3">
+      <div class="flex justify-between text-xs text-gray-500 mb-1.5">
+        <span>Использовано: <span id="s-used" class="font-semibold text-gray-800"></span></span>
+        <span>Свободно: <span id="s-free" class="font-semibold text-gray-800"></span></span>
+      </div>
+      <div class="w-full bg-gray-100 rounded-full h-1.5">
+        <div id="s-bar" class="h-1.5 rounded-full bg-blue-500 transition-all duration-500" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-gray-500 mb-3">
+      <div>ZIP архивы: <span id="s-uploads" class="font-medium text-gray-700"></span></div>
+      <div>Изображения: <span id="s-batches" class="font-medium text-gray-700"></span></div>
+      <div>Превью: <span id="s-previews" class="font-medium text-gray-700"></span></div>
+      <div>CSV: <span id="s-exports" class="font-medium text-gray-700"></span></div>
+    </div>
+    <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+      <button onclick="showCleanupModal('all')"
+        class="text-xs bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg font-medium transition-colors">
+        Очистить все данные
+      </button>
+      <button onclick="showCleanupModal('previews')"
+        class="text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg transition-colors">
+        Удалить только превью
+      </button>
+      <button onclick="showCleanupModal('exports')"
+        class="text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg transition-colors">
+        Удалить только CSV
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Batch list -->
 <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
   <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
     <h3 class="font-semibold text-gray-800 text-sm">Все партии</h3>
@@ -115,6 +173,67 @@
   </div>
   {% endif %}
 </div>
+
+<!-- Cleanup All Modal -->
+<div id="cleanup-all-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center" onclick="if(event.target===this)closeCleanupModal('all')">
+  <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4" onclick="event.stopPropagation()">
+    <div class="flex items-start gap-3 mb-5">
+      <div class="text-red-500 text-2xl shrink-0">⚠</div>
+      <div>
+        <h3 class="font-semibold text-gray-800 mb-2">Будут удалены:</h3>
+        <ul class="text-sm text-gray-600 space-y-0.5 list-disc list-inside">
+          <li>все ZIP архивы</li>
+          <li>все извлечённые изображения</li>
+          <li>все превью</li>
+          <li>все CSV</li>
+          <li>вся история партий</li>
+          <li>metadata и логи партий</li>
+        </ul>
+        <p class="text-xs text-red-600 mt-3 font-semibold">Это действие нельзя отменить.</p>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="doCleanup('all')" class="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">Удалить всё</button>
+      <button onclick="closeCleanupModal('all')" class="px-4 py-2 border border-gray-300 text-sm rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cleanup Previews Modal -->
+<div id="cleanup-previews-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center" onclick="if(event.target===this)closeCleanupModal('previews')">
+  <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4" onclick="event.stopPropagation()">
+    <div class="flex items-start gap-3 mb-5">
+      <div class="text-yellow-500 text-2xl shrink-0">⚠</div>
+      <div>
+        <h3 class="font-semibold text-gray-800 mb-2">Удалить все превью?</h3>
+        <p class="text-sm text-gray-600">Превью для просмотра карточек будут удалены. Они создадутся заново при открытии партии.</p>
+        <p class="text-xs text-gray-500 mt-2">Оригинальные изображения не затрагиваются.</p>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="doCleanup('previews')" class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">Удалить превью</button>
+      <button onclick="closeCleanupModal('previews')" class="px-4 py-2 border border-gray-300 text-sm rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cleanup Exports Modal -->
+<div id="cleanup-exports-modal" class="fixed inset-0 bg-black/40 z-50 hidden flex items-center justify-center" onclick="if(event.target===this)closeCleanupModal('exports')">
+  <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4" onclick="event.stopPropagation()">
+    <div class="flex items-start gap-3 mb-5">
+      <div class="text-yellow-500 text-2xl shrink-0">⚠</div>
+      <div>
+        <h3 class="font-semibold text-gray-800 mb-2">Удалить все CSV?</h3>
+        <p class="text-sm text-gray-600">Все экспортированные CSV-файлы будут удалены. Их можно сгенерировать повторно из готовых партий.</p>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="doCleanup('exports')" class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">Удалить CSV</button>
+      <button onclick="closeCleanupModal('exports')" class="px-4 py-2 border border-gray-300 text-sm rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">Отмена</button>
+    </div>
+  </div>
+</div>
+
 <script>
 function promptRename(form, e, currentName) {
   e.preventDefault();
@@ -125,5 +244,83 @@ function promptRename(form, e, currentName) {
   form.submit();
   return false;
 }
+
+async function loadStorage() {
+  try {
+    const r = await fetch('/api/storage');
+    const d = await r.json();
+    if (!d.ok) {
+      document.getElementById('storage-loading').classList.add('hidden');
+      document.getElementById('storage-error').classList.remove('hidden');
+      return;
+    }
+
+    document.getElementById('s-used').textContent = d.total_fmt;
+    document.getElementById('s-free').textContent = d.free_fmt;
+    document.getElementById('s-uploads').textContent = d.uploads_fmt;
+    document.getElementById('s-batches').textContent = d.batches_fmt;
+    document.getElementById('s-previews').textContent = d.previews_fmt;
+    document.getElementById('s-exports').textContent = d.exports_fmt;
+
+    const usedGb = d.total_bytes / (1024 ** 3);
+    const freeGb = d.free_gb;
+    const totalGb = usedGb + freeGb;
+    const pct = totalGb > 0 ? Math.min(99, Math.round(usedGb / totalGb * 100)) : 0;
+    const bar = document.getElementById('s-bar');
+    bar.style.width = pct + '%';
+    bar.classList.remove('bg-blue-500', 'bg-yellow-500', 'bg-red-500');
+    bar.classList.add(pct > 80 ? 'bg-red-500' : pct > 60 ? 'bg-yellow-500' : 'bg-blue-500');
+
+    document.getElementById('storage-loading').classList.add('hidden');
+    document.getElementById('storage-content').classList.remove('hidden');
+
+    if (d.low_disk) {
+      document.getElementById('low-disk-msg').textContent =
+        `Свободно: ${d.free_gb.toFixed(1)} ГБ (порог предупреждения: ${d.warn_free_gb} ГБ)`;
+      document.getElementById('low-disk-warning').classList.remove('hidden');
+    } else {
+      document.getElementById('low-disk-warning').classList.add('hidden');
+    }
+  } catch(e) {
+    document.getElementById('storage-loading').classList.add('hidden');
+    document.getElementById('storage-error').classList.remove('hidden');
+  }
+}
+
+function refreshStorage() {
+  document.getElementById('storage-loading').classList.remove('hidden');
+  document.getElementById('storage-content').classList.add('hidden');
+  document.getElementById('storage-error').classList.add('hidden');
+  loadStorage();
+}
+
+function showCleanupModal(type) {
+  document.getElementById('cleanup-' + type + '-modal').classList.remove('hidden');
+}
+
+function closeCleanupModal(type) {
+  document.getElementById('cleanup-' + type + '-modal').classList.add('hidden');
+}
+
+async function doCleanup(type) {
+  closeCleanupModal(type);
+  const urls = {
+    'all': '/api/cleanup/all',
+    'previews': '/api/cleanup/previews',
+    'exports': '/api/cleanup/exports',
+  };
+  try {
+    const r = await fetch(urls[type], {method: 'POST'});
+    const d = await r.json();
+    if (d.ok) {
+      refreshStorage();
+      if (type === 'all') {
+        setTimeout(() => window.location.reload(), 900);
+      }
+    }
+  } catch(e) {}
+}
+
+loadStorage();
 </script>
 {% endblock %}

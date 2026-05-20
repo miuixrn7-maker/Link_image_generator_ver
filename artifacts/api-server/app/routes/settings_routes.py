@@ -1,7 +1,7 @@
+from typing import Optional
+
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-
-from pathlib import Path
 
 from app.auth import is_authenticated, current_user
 from app.settings_manager import load_settings, save_settings, DEFAULTS
@@ -30,18 +30,35 @@ async def save_settings_route(
     batch_expire_days: str = Form("14"),
     preview_expire_hours: str = Form("24"),
     thumbnail_quality: str = Form("82"),
+    vps_total_gb: str = Form("80"),
+    warn_free_gb: str = Form("15"),
+    warn_large_archive: Optional[str] = Form(None),
+    warn_zip_gb: str = Form("3"),
+    warn_max_articles: str = Form("350"),
+    warn_max_images: str = Form("900"),
 ):
     if not is_authenticated(request):
         return JSONResponse({"ok": False}, status_code=401)
 
-    batch_days = None if batch_expire_days == "never" else int(batch_expire_days)
-    preview_hours = None if preview_expire_hours == "never" else int(preview_expire_hours)
-    thumb_q = int(thumbnail_quality) if thumbnail_quality.isdigit() else 82
+    def _int(s, default):
+        try:
+            return int(s)
+        except Exception:
+            return default
+
+    batch_days = None if batch_expire_days == "never" else _int(batch_expire_days, 14)
+    preview_hours = None if preview_expire_hours == "never" else _int(preview_expire_hours, 24)
 
     save_settings({
         "batch_expire_days": batch_days,
         "preview_expire_hours": preview_hours,
-        "thumbnail_quality": thumb_q,
+        "thumbnail_quality": _int(thumbnail_quality, 82),
+        "vps_total_gb": _int(vps_total_gb, 80),
+        "warn_free_gb": _int(warn_free_gb, 15),
+        "warn_large_archive": warn_large_archive is not None,
+        "warn_zip_gb": _int(warn_zip_gb, 3),
+        "warn_max_articles": _int(warn_max_articles, 350),
+        "warn_max_images": _int(warn_max_images, 900),
     })
     return RedirectResponse(url="/settings?saved=1", status_code=302)
 

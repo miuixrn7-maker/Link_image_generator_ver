@@ -1,0 +1,287 @@
+Add VPS storage cleanup tools, storage monitoring, and storage warning settings.
+
+Goal:
+Help manage VPS disk space for large ZIP/image workflows.
+
+Do NOT redesign the app.
+Do NOT change CSV format.
+Add simple admin cleanup controls and storage monitoring.
+
+1. GLOBAL STORAGE USAGE BLOCK
+
+On the “История партий” page add a storage info block above the batch list.
+
+Show:
+
+Хранилище VPS
+
+Использовано:
+X GB / Y GB
+
+Свободно:
+X GB
+
+Папки:
+
+* ZIP архивы: X GB
+* Изображения: X GB
+* Превью: X GB
+* CSV: X MB
+
+Implementation:
+Calculate folder sizes for:
+
+* uploads/
+* batches/
+* previews/
+* exports/
+
+Use readable formatting:
+MB / GB
+
+Refresh values:
+
+* on page load
+* after deleting batches
+* after cleanup actions
+
+2. SETTINGS FOR VPS STORAGE WARNINGS
+
+Add new section in “Настройки”:
+
+“Контроль хранилища VPS”
+
+Settings:
+
+1. Размер SSD VPS
+   Default:
+   80 GB
+
+Tooltip:
+“Используется для расчёта предупреждений о нехватке свободного места.”
+
+2. Порог предупреждения свободного места
+   Default:
+   15 GB
+
+Tooltip:
+“Если свободного места останется меньше указанного значения — приложение покажет предупреждение.”
+
+3. Предупреждать о большом архиве
+   Options:
+
+* Вкл
+* Выкл
+
+Default:
+Вкл
+
+Tooltip:
+“Показывает предупреждение если архив может быть слишком большим для стабильной обработки.”
+
+4. Порог размера ZIP
+   Default:
+   3 GB
+
+Tooltip:
+“Если ZIP архив больше указанного размера — приложение покажет предупреждение.”
+
+5. Порог количества артикулов
+   Default:
+   350
+
+Tooltip:
+“Если архив содержит слишком много артикулов — приложение покажет предупреждение.”
+
+6. Порог количества изображений
+   Default:
+   900
+
+Tooltip:
+“Если архив содержит слишком много изображений — приложение покажет предупреждение.”
+
+Store these settings in:
+settings.json
+
+3. LARGE ARCHIVE WARNING
+
+Before extraction analyze:
+
+* ZIP size
+* article count
+* image count
+
+If any threshold exceeded:
+show warning modal:
+
+⚠ Архив может быть слишком большим для стабильной обработки.
+Рекомендуется разделить архив на части.
+
+Размер ZIP: X GB
+Артикулов: X
+Изображений: X
+
+[Продолжить]
+[Отмена]
+
+Behavior:
+
+* warning only
+* upload still allowed
+* extraction continues only after confirmation
+
+4. LOW DISK SPACE WARNING
+
+If free disk space becomes lower than configured threshold:
+
+Show warning above batch history:
+
+⚠ На VPS осталось мало свободного места.
+Рекомендуется удалить старые партии или очистить превью.
+
+Show:
+
+* free GB remaining
+* configured threshold
+
+5. GLOBAL CLEANUP BUTTON
+
+Add button above batch history:
+
+“Очистить все данные”
+
+Style:
+danger/red button
+
+Confirmation modal required.
+
+Modal text:
+
+⚠ Будут удалены:
+
+* все ZIP архивы
+* все извлечённые изображения
+* все превью
+* все CSV
+* вся история партий
+* metadata и логи партий
+
+Это действие нельзя отменить.
+
+[Удалить всё]
+[Отмена]
+
+6. IMPORTANT CLEANUP LOGIC CHANGE
+
+Do NOT delete required application folders themselves.
+
+Instead:
+clear only folder contents.
+
+Folders must remain existing:
+
+* uploads/
+* batches/
+* previews/
+* exports/
+* logs/
+* metadata/
+
+Delete only:
+
+* contents inside these folders
+* batch-specific metadata/logs
+
+Do NOT delete:
+
+* settings.json
+* presets.json
+* .env
+* application source code
+* required folder structure
+
+After cleanup:
+folders must still exist and remain writable.
+
+7. PARTIAL CLEANUP BUTTONS
+
+Add smaller buttons near storage info:
+
+“Удалить только превью”
+“Удалить только CSV”
+
+Behavior:
+
+Delete only contents of:
+
+* previews/
+  OR
+* exports/
+
+Then:
+
+* refresh storage usage block
+* previews regenerate automatically later if needed
+
+8. SAFETY REQUIREMENTS
+
+9. Cleanup must tolerate partially missing files/folders.
+
+10. Cleanup must never delete application source code.
+
+11. Cleanup must never delete:
+
+    * settings.json
+    * presets.json
+    * .env
+
+12. Use safe path validation.
+
+13. Prevent deleting outside allowed directories.
+
+14. Add cleanup logging.
+
+15. HELPER FUNCTIONS
+
+Add helper functions:
+
+* get_directory_size()
+* get_total_storage_usage()
+* get_free_disk_space()
+
+Use recursive folder size calculation.
+
+Human-readable formatting:
+
+* 532 MB
+* 2.4 GB
+* 18.7 GB
+
+10. TESTING
+
+Test:
+
+* cleanup all
+* cleanup previews only
+* cleanup CSV only
+* storage values update correctly
+* folders remain existing after cleanup
+* app still works after cleanup
+* upload works after cleanup
+* previews regenerate after preview cleanup
+* low disk warning appears
+* large archive warning appears
+* settings persist after restart
+* no source files deleted
+
+11. FINAL REPORT
+
+After implementation respond in Russian with:
+
+* what cleanup tools were added
+* what folders are cleaned
+* what files are preserved
+* how storage usage is calculated
+* how warning thresholds work
+* how settings are stored
+* what safety protections were added

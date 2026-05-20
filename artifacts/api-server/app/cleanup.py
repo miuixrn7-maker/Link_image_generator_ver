@@ -96,3 +96,118 @@ def auto_cleanup():
             delete_batch(batch["id"])
             deleted += 1
     return deleted
+
+
+def fmt_size(size_bytes: int) -> str:
+    if size_bytes < 1024:
+        return f"{size_bytes} Б"
+    if size_bytes < 1024 ** 2:
+        return f"{size_bytes / 1024:.1f} КБ"
+    if size_bytes < 1024 ** 3:
+        return f"{size_bytes / (1024 ** 2):.1f} МБ"
+    return f"{size_bytes / (1024 ** 3):.2f} ГБ"
+
+
+def get_directory_size(path: Path) -> int:
+    if not path.exists():
+        return 0
+    total = 0
+    try:
+        for p in path.rglob("*"):
+            if p.is_file():
+                try:
+                    total += p.stat().st_size
+                except Exception:
+                    pass
+    except Exception:
+        pass
+    return total
+
+
+def get_total_storage_usage() -> dict:
+    from app.config import get_free_disk_space
+    uploads = get_directory_size(UPLOADS_DIR)
+    batches = get_directory_size(BATCHES_DIR)
+    previews = get_directory_size(PREVIEWS_DIR)
+    exports = get_directory_size(EXPORTS_DIR)
+    total = uploads + batches + previews + exports
+    free_gb = get_free_disk_space()
+    return {
+        "uploads_bytes": uploads,
+        "batches_bytes": batches,
+        "previews_bytes": previews,
+        "exports_bytes": exports,
+        "total_bytes": total,
+        "uploads_fmt": fmt_size(uploads),
+        "batches_fmt": fmt_size(batches),
+        "previews_fmt": fmt_size(previews),
+        "exports_fmt": fmt_size(exports),
+        "total_fmt": fmt_size(total),
+        "free_gb": round(free_gb, 1),
+        "free_fmt": fmt_size(int(free_gb * (1024 ** 3))),
+    }
+
+
+_PROTECTED_FILES = {"settings.json", "presets.json", ".env"}
+
+
+def _clear_dir_contents(path: Path, protected: set = None) -> int:
+    if not path.exists():
+        return 0
+    count = 0
+    try:
+        for item in list(path.iterdir()):
+            if protected and item.name in protected:
+                continue
+            try:
+                if item.is_dir():
+                    shutil.rmtree(item, ignore_errors=True)
+                else:
+                    item.unlink(missing_ok=True)
+                count += 1
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return count
+
+
+def cleanup_all_data() -> dict:
+    counts = {
+        "uploads": _clear_dir_contents(UPLOADS_DIR),
+        "batches": _clear_dir_contents(BATCHES_DIR),
+        "previews": _clear_dir_contents(PREVIEWS_DIR),
+        "exports": _clear_dir_contents(EXPORTS_DIR),
+        "logs": _clear_dir_contents(LOGS_DIR),
+        "metadata": _clear_dir_contents(METADATA_DIR, protected=_PROTECTED_FILES),
+    }
+    for d in [UPLOADS_DIR, BATCHES_DIR, PREVIEWS_DIR, EXPORTS_DIR, LOGS_DIR, METADATA_DIR]:
+        d.mkdir(parents=True, exist_ok=True)
+    total = sum(counts.values())
+    return {"ok": True, "deleted_items": total, "counts": counts}
+
+
+def cleanup_previews_only() -> dict:
+    count = _clear_dir_contents(PREVIEWS_DIR)
+    PREVIEWS_DIR.mkdir(parents=True, exist_ok=True)
+    return {"ok": True, "deleted_items": count}
+
+
+def cleanup_exports_only() -> dict:
+    count = _clear_dir_contents(EXPORTS_DIR)
+    EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        for batch in list_all_batches():
+            bid = batch.get("id")
+            if not bid:
+                continue
+            meta = load_metadata(bid)
+            if meta and meta.get("csv_path"):
+                meta["csv_path"] = None
+                meta["csv_filename"] = None
+                if meta.get("status") == "csv_ready":
+                    meta["status"] = "distributed"
+                save_metadata(bid, meta)
+    except Exception:
+        pass
+    return {"ok": True, "deleted_items": count}

@@ -11,6 +11,12 @@ DEFAULTS: dict = {
     "batch_expire_days": 14,
     "preview_expire_hours": 24,
     "thumbnail_quality": 82,
+    "vps_total_gb": 80,
+    "warn_free_gb": 15,
+    "warn_large_archive": True,
+    "warn_zip_gb": 3,
+    "warn_max_articles": 350,
+    "warn_max_images": 900,
 }
 
 

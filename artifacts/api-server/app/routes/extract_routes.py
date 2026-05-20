@@ -55,18 +55,26 @@ async def analyze_zip_archive(request: Request, batch_id: str):
         return JSONResponse({"ok": False, "error": f"Ошибка анализа архива: {e}"})
 
     free_gb = get_free_disk_space()
+    from app.settings_manager import get_setting
+    warn_enabled = get_setting("warn_large_archive")
+    warn_zip_thresh = float(get_setting("warn_zip_gb") or WARNING_MAX_ZIP_GB)
+    warn_articles_thresh = int(get_setting("warn_max_articles") or WARNING_MAX_ARTICLES)
+    warn_images_thresh = int(get_setting("warn_max_images") or WARNING_MAX_IMAGES)
+    warn_free_thresh = float(get_setting("warn_free_gb") or 15)
+
     warnings = []
-    if zip_gb >= WARNING_MAX_ZIP_GB:
-        warnings.append(f"Размер ZIP: {zip_gb:.1f} ГБ (рекомендуемый предел {WARNING_MAX_ZIP_GB} ГБ)")
-    if article_count >= WARNING_MAX_ARTICLES:
-        warnings.append(f"Артикулов: {article_count} (рекомендуемый предел {WARNING_MAX_ARTICLES})")
-    if image_count >= WARNING_MAX_IMAGES:
-        warnings.append(f"Изображений: {image_count} (рекомендуемый предел {WARNING_MAX_IMAGES})")
-    low_disk = free_gb < max(zip_gb * 2.5 + 0.5, 1.0)
+    if warn_enabled is not False:
+        if zip_gb >= warn_zip_thresh:
+            warnings.append(f"Размер ZIP: {zip_gb:.1f} ГБ (рекомендуемый предел {warn_zip_thresh:.0f} ГБ)")
+        if article_count >= warn_articles_thresh:
+            warnings.append(f"Артикулов: {article_count} (рекомендуемый предел {warn_articles_thresh})")
+        if image_count >= warn_images_thresh:
+            warnings.append(f"Изображений: {image_count} (рекомендуемый предел {warn_images_thresh})")
+    low_disk = free_gb < max(zip_gb * 2.5 + 0.5, warn_free_thresh)
     if low_disk:
         warnings.append(
             f"Мало свободного места: {free_gb:.1f} ГБ "
-            f"(рекомендуется {max(zip_gb*2.5+0.5, 1.0):.1f} ГБ)"
+            f"(рекомендуется {max(zip_gb*2.5+0.5, warn_free_thresh):.1f} ГБ)"
         )
 
     return JSONResponse({
