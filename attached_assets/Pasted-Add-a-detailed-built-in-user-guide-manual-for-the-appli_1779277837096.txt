@@ -1,0 +1,133 @@
+Add a detailed built-in user guide/manual for the application.
+
+Goal:
+Create a clear step-by-step manual for the entire workflow of the site and make it accessible from the UI.
+
+Do NOT redesign the application.
+Do NOT add public documentation pages.
+This is an internal/private tool manual.
+
+1. ADD “РУКОВОДСТВО” BUTTON IN FAQ
+
+In the FAQ section add button:
+
+“Руководство”
+
+Behavior:
+
+* opens built-in manual page/modal
+  OR
+* opens dedicated internal route
+
+Examples:
+
+* /guide
+* /manual
+
+2. CREATE DETAILED USER MANUAL
+
+Create a detailed Russian-language guide covering the full workflow.
+
+Sections:
+
+1. Что делает сайт
+2. Требования к ZIP архиву
+3. Как правильно подготавливать изображения
+4. Как загружать архив
+5. Что означают предупреждения
+6. Как работает автораспределение
+7. Как менять изображения вручную
+8. Drag-and-drop возможности
+9. Как работает вкладка «Транслитерация»
+10. Как формируется CSV
+11. Что означают статусы партий
+12. Как пользоваться Историей партий
+13. Как очищать VPS хранилище
+14. Что делать если:
+
+* ZIP слишком большой
+* нет места на VPS
+* не создаются превью
+* CSV не скачивается
+* битые изображения
+* ошибки транслитерации
+
+15. Ограничения VPS
+16. Рекомендации по размеру архивов
+
+Include practical recommendations already used in the project:
+
+🟢 Нормально:
+до 500–700 изображений
+до 2 GB ZIP
+
+🟡 Желательно делить:
+800–1200 изображений
+или 3 GB+
+
+🔴 Обязательно делить:
+1500+ изображений
+или 4–5 GB+
+
+3. GUIDE UI
+
+Requirements:
+
+* readable typography
+* collapsible sections
+* left navigation/sidebar optional
+* mobile-friendly
+* preserve white/light UI style
+
+4. DOWNLOAD MANUAL
+
+Add buttons:
+
+“Скачать PDF”
+“Скачать Word”
+
+Generate:
+
+* PDF version
+* DOCX version
+
+Requirements:
+
+* Russian language support
+* UTF-8 safe
+* preserve headings and formatting
+* include generation date
+
+Suggested filenames:
+rukovodstvo.pdf
+rukovodstvo.docx
+
+5. IMPLEMENTATION REQUIREMENTS
+
+6. Guide content should be stored separately from templates if possible.
+
+7. Avoid hardcoded giant HTML blocks.
+
+8. Support future editing/expansion.
+
+9. Prefer markdown or structured content source.
+
+10. PDF/DOCX generation should use same source content.
+
+11. OPTIONAL IMPROVEMENTS
+
+If easy:
+
+* add search inside guide
+* add “copy section link”
+* add quick links from FAQ items to relevant guide sections
+
+7. FINAL REPORT
+
+After implementation respond in Russian with:
+
+* where guide is stored
+* how PDF generation works
+* how DOCX generation works
+* how to edit guide content later
+* what libraries were added

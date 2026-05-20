@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Руководство — Генератор прямых ссылок{% endblock %}
+{% block page_title %}Руководство пользователя{% endblock %}
+
+{% block content %}
+<div class="flex gap-6 items-start">
+
+  <!-- Left nav (sticky) -->
+  <aside class="hidden lg:block w-56 shrink-0 sticky top-20">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-3">
+      <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-2 mb-2">Разделы</p>
+      <nav id="guide-nav" class="space-y-0.5 text-xs">
+        {% for sec in sections %}
+        <a href="#{{ sec.id }}"
+           class="guide-nav-link block px-2 py-1.5 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-colors leading-snug"
+           data-target="{{ sec.id }}">{{ sec.title }}</a>
+        {% endfor %}
+      </nav>
+      <div class="mt-3 pt-3 border-t border-gray-100 space-y-1.5">
+        <a href="/guide/download-pdf"
+           class="flex items-center gap-1.5 text-xs text-gray-500 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Скачать PDF
+        </a>
+        <a href="/guide/download-docx"
+           class="flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-600 px-2 py-1 rounded-lg hover:bg-blue-50 transition-colors">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Скачать DOCX
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <div class="flex-1 min-w-0 space-y-3">
+
+    <!-- Header card -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm px-6 py-5 flex items-center justify-between flex-wrap gap-3">
+      <div>
+        <h2 class="text-lg font-semibold text-gray-800">Руководство пользователя</h2>
+        <p class="text-sm text-gray-500 mt-0.5">Версия {{ version }} · {{ guide_date }}</p>
+      </div>
+      <div class="flex gap-2">
+        <a href="/guide/download-pdf"
+           class="inline-flex items-center gap-1.5 border border-gray-200 text-sm text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 px-3 py-1.5 rounded-lg transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          PDF
+        </a>
+        <a href="/guide/download-docx"
+           class="inline-flex items-center gap-1.5 border border-gray-200 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 px-3 py-1.5 rounded-lg transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          DOCX
+        </a>
+      </div>
+    </div>
+
+    <!-- Sections -->
+    {% for sec in sections %}
+    <div id="{{ sec.id }}" class="guide-section bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <!-- Section header (clickable to collapse) -->
+      <button onclick="toggleSection('{{ sec.id }}')"
+        class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors">
+        <span class="font-semibold text-gray-800 text-sm">
+          <span class="text-blue-600 font-bold mr-2">{{ loop.index }}.</span>{{ sec.title }}
+        </span>
+        <svg id="chevron-{{ sec.id }}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             class="text-gray-400 shrink-0 transition-transform duration-200">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+      <!-- Section body -->
+      <div id="body-{{ sec.id }}" class="border-t border-gray-100 px-5 py-4 guide-body prose-guide">
+        {% for block_type, block_data in sec.content %}
+
+          {% if block_type == 'p' %}
+          <p class="text-sm text-gray-700 leading-relaxed mb-3">{{ block_data }}</p>
+
+          {% elif block_type == 'h3' %}
+          <h3 class="text-sm font-semibold text-gray-800 mt-4 mb-2 first:mt-0">{{ block_data }}</h3>
+
+          {% elif block_type == 'ul' %}
+          <ul class="list-disc list-outside pl-5 mb-3 space-y-1">
+            {% for item in block_data %}
+            <li class="text-sm text-gray-700 leading-relaxed">{{ item }}</li>
+            {% endfor %}
+          </ul>
+
+          {% elif block_type == 'ol' %}
+          <ol class="list-decimal list-outside pl-5 mb-3 space-y-1">
+            {% for item in block_data %}
+            <li class="text-sm text-gray-700 leading-relaxed">{{ item }}</li>
+            {% endfor %}
+          </ol>
+
+          {% elif block_type == 'code' %}
+          <pre class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-xs font-mono text-gray-700 overflow-x-auto mb-3 leading-relaxed">{{ block_data }}</pre>
+
+          {% elif block_type == 'table' %}
+          <div class="overflow-x-auto mb-3">
+            <table class="w-full text-xs border border-gray-200 rounded-lg overflow-hidden">
+              <thead class="bg-gray-50">
+                <tr>
+                  {% for h in block_data.headers %}
+                  <th class="px-3 py-2 text-left font-semibold text-gray-600 border-b border-gray-200">{{ h }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                {% for row in block_data.rows %}
+                <tr class="hover:bg-gray-50">
+                  {% for cell in row %}
+                  <td class="px-3 py-2 text-gray-700">{{ cell }}</td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Collapse/expand sections
+function toggleSection(id) {
+  const body = document.getElementById('body-' + id);
+  const chev = document.getElementById('chevron-' + id);
+  const hidden = body.classList.toggle('hidden');
+  chev.style.transform = hidden ? 'rotate(-90deg)' : '';
+}
+
+// Highlight active nav link on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      document.querySelectorAll('.guide-nav-link').forEach(a => {
+        a.classList.toggle('bg-blue-50', a.dataset.target === e.target.id);
+        a.classList.toggle('text-blue-700', a.dataset.target === e.target.id);
+        a.classList.toggle('font-medium', a.dataset.target === e.target.id);
+      });
+    }
+  });
+}, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
+
+document.querySelectorAll('.guide-section').forEach(el => observer.observe(el));
+
+// Smooth scroll for nav links
+document.querySelectorAll('.guide-nav-link').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.getElementById(a.dataset.target);
+    if (target) {
+      // Make sure section is open
+      const body = document.getElementById('body-' + a.dataset.target);
+      const chev = document.getElementById('chevron-' + a.dataset.target);
+      if (body.classList.contains('hidden')) {
+        body.classList.remove('hidden');
+        chev.style.transform = '';
+      }
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+</script>
+{% endblock %}

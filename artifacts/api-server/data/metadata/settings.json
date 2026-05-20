@@ -1,5 +1,11 @@
 {
   "batch_expire_days": 14,
   "preview_expire_hours": 24,
-  "thumbnail_quality": 60
+  "thumbnail_quality": 60,
+  "vps_total_gb": 80,
+  "warn_free_gb": 15,
+  "warn_large_archive": true,
+  "warn_zip_gb": 5,
+  "warn_max_articles": 250,
+  "warn_max_images": 500
 }

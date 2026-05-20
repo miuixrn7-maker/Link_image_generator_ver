@@ -67,6 +67,14 @@ artifacts/api-server/
 - Интерфейс на русском языке, код на английском
 - Версия 1: без WB/Ozon экспорта, без мультиюзера, без ресайза изображений
 
+## Guide / Manual
+
+- Маршрут: `/guide` — встроенное руководство пользователя (16 разделов)
+- Контент хранится в `app/guide_content.py` — список `SECTIONS`, легко редактировать
+- PDF: `fpdf2` + шрифты DejaVuSans/DejaVuSans-Bold (хранятся в `data/fonts/`, скачиваются при первом запросе)
+- DOCX: `python-docx`
+- Маршруты: `GET /guide`, `GET /guide/download-pdf`, `GET /guide/download-docx`
+
 ## Gotchas
 
 - `configureWorkflow` иногда даёт "failed" даже если сервер запустился — проверять через `getWorkflowStatus`

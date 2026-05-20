@@ -18,6 +18,7 @@ from app.routes.preview_routes import router as preview_router
 from app.routes.image_routes import router as image_router
 from app.routes.history_routes import router as history_router
 from app.routes.settings_routes import router as settings_router
+from app.routes.guide_routes import router as guide_router
 
 BASE_DIR = Path(__file__).parent
 
@@ -57,6 +58,7 @@ app.include_router(preview_router)
 app.include_router(image_router)
 app.include_router(history_router)
 app.include_router(settings_router)
+app.include_router(guide_router)
 
 
 @app.on_event("startup")
