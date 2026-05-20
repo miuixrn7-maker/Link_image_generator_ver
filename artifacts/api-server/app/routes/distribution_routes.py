@@ -84,3 +84,18 @@ async def run_distribution(
 
     result = run_auto_distribution(batch_id, rules)
     return JSONResponse(result)
+
+
+@router.get("/batch/{batch_id}/api/articles")
+async def get_articles_api(request: Request, batch_id: str):
+    if not is_authenticated(request):
+        return JSONResponse({"ok": False}, status_code=401)
+    meta = load_metadata(batch_id)
+    if not meta:
+        return JSONResponse({"ok": False, "error": "Партия не найдена"})
+    articles_data = meta.get("articles", {})
+    articles = [
+        {"name": name, "display": data.get("display_article", name)}
+        for name, data in articles_data.items()
+    ]
+    return JSONResponse({"ok": True, "articles": articles})

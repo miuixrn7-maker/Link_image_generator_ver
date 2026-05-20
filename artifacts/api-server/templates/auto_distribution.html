@@ -164,13 +164,22 @@
     </div>
   </div>
 
-  <!-- Right: logs -->
-  <div class="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm">
+  <!-- Right: tabs (logs + transliteration) -->
+  <div class="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm min-w-0">
     {% set error_count = log_entries | selectattr('level', 'equalto', 'error') | list | length %}
     {% set warning_count = log_entries | selectattr('level', 'equalto', 'warning') | list | length %}
-    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-      <h3 class="font-semibold text-gray-800 text-sm">Логи</h3>
-      <div class="flex items-center gap-2">
+
+    <!-- Tab header -->
+    <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap">
+      <div class="flex border border-gray-200 rounded-lg overflow-hidden text-xs font-medium">
+        <button onclick="switchTab('logs')" id="tab-btn-logs"
+          class="tab-top-btn px-4 py-1.5 bg-blue-50 text-blue-700 border-r border-gray-200">Логи</button>
+        <button onclick="switchTab('translit')" id="tab-btn-translit"
+          class="tab-top-btn px-4 py-1.5 text-gray-600 hover:bg-gray-50 transition-colors">Транслитерация</button>
+      </div>
+
+      <!-- Log filter controls (hidden when translit tab active) -->
+      <div id="log-actions" class="flex items-center gap-2">
         <div class="flex border border-gray-200 rounded-lg overflow-hidden text-xs">
           <button onclick="filterLog('all')" class="log-filter-btn active px-3 py-1.5" data-filter="all">Все</button>
           <button onclick="filterLog('error')" class="log-filter-btn px-3 py-1.5 flex items-center gap-1" data-filter="error">
@@ -185,19 +194,54 @@
         <a href="/logs?batch_id={{ batch.id }}" class="text-xs text-gray-500 hover:underline">Полный лог</a>
         <a href="/batch/{{ batch.id }}/download-log" class="text-xs text-blue-600 hover:underline">Скачать лог</a>
       </div>
-    </div>
-    <div id="log-container" class="h-96 overflow-y-auto p-4 font-mono text-xs space-y-1">
-      {% for entry in log_entries %}
-      <div class="log-entry log-{{ entry.level }} flex gap-2">
-        <span class="text-gray-400 shrink-0">{{ entry.ts[:19].replace('T',' ') }}</span>
-        <span class="shrink-0 {% if entry.level == 'error' %}text-red-600{% elif entry.level == 'warning' %}text-yellow-600{% else %}text-gray-500{% endif %}">[{{ entry.level }}]</span>
-        {% if entry.article %}<span class="text-blue-600 shrink-0">{{ entry.article }}:</span>{% endif %}
-        <span class="text-gray-700 break-all">{{ entry.message }}</span>
+
+      <!-- Translit controls (hidden by default) -->
+      <div id="translit-actions" class="hidden flex items-center gap-2">
+        <input id="translit-search" type="text" placeholder="Фильтр по артикулу…"
+          oninput="filterTranslit(this.value)"
+          class="border border-gray-200 rounded-lg px-2.5 py-1 text-xs w-44 focus:outline-none focus:ring-1 focus:ring-blue-500"/>
+        <button onclick="copyAllTranslit()"
+          class="text-xs border border-gray-200 text-gray-600 hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors">
+          Копировать всё
+        </button>
       </div>
-      {% else %}
-      <div class="text-gray-400 text-center py-8">Логи появятся после запуска автораспределения</div>
-      {% endfor %}
     </div>
+
+    <!-- Logs tab -->
+    <div id="tab-logs">
+      <div id="log-container" class="h-96 overflow-y-auto p-4 font-mono text-xs space-y-1">
+        {% for entry in log_entries %}
+        <div class="log-entry log-{{ entry.level }} flex gap-2">
+          <span class="text-gray-400 shrink-0">{{ entry.ts[:19].replace('T',' ') }}</span>
+          <span class="shrink-0 {% if entry.level == 'error' %}text-red-600{% elif entry.level == 'warning' %}text-yellow-600{% else %}text-gray-500{% endif %}">[{{ entry.level }}]</span>
+          {% if entry.article %}<span class="text-blue-600 shrink-0">{{ entry.article }}:</span>{% endif %}
+          <span class="text-gray-700 break-all">{{ entry.message }}</span>
+        </div>
+        {% else %}
+        <div class="text-gray-400 text-center py-8">Логи появятся после запуска автораспределения</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Transliteration tab -->
+    <div id="tab-translit" class="hidden">
+      <div id="translit-loading" class="text-xs text-gray-400 text-center py-8">Загрузка артикулов…</div>
+      <div id="translit-empty" class="hidden text-xs text-gray-400 text-center py-8">Нет артикулов — распакуйте архив</div>
+      <div id="translit-table-wrap" class="hidden overflow-y-auto" style="max-height:24rem">
+        <table class="w-full text-xs">
+          <thead class="bg-gray-50 border-b border-gray-100 sticky top-0">
+            <tr>
+              <th class="text-left px-4 py-2.5 font-semibold text-gray-500 uppercase tracking-wide w-1/2">Артикул</th>
+              <th class="text-left px-4 py-2.5 font-semibold text-gray-500 uppercase tracking-wide w-1/2">Транслитерация</th>
+              <th class="px-3 py-2.5 w-10"></th>
+            </tr>
+          </thead>
+          <tbody id="translit-tbody" class="divide-y divide-gray-100"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Preview button (always visible at bottom) -->
     <div id="preview-btn-section" class="{% if batch.status == 'distributed' or batch.status == 'csv_ready' %}{% else %}hidden{% endif %} px-5 py-4 border-t border-gray-100">
       <a href="/batch/{{ batch.id }}/preview"
          class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
@@ -431,5 +475,114 @@ function filterLog(type) {
 }
 const logContainer = document.getElementById('log-container');
 logContainer.scrollTop = logContainer.scrollHeight;
+
+// ─── Tab switching ────────────────────────────────────────────────────────────
+let translitLoaded = false;
+
+function switchTab(tab) {
+  const isLogs = tab === 'logs';
+  document.getElementById('tab-logs').classList.toggle('hidden', !isLogs);
+  document.getElementById('tab-translit').classList.toggle('hidden', isLogs);
+  document.getElementById('log-actions').classList.toggle('hidden', !isLogs);
+  document.getElementById('translit-actions').classList.toggle('hidden', isLogs);
+
+  const btnLogs = document.getElementById('tab-btn-logs');
+  const btnTr   = document.getElementById('tab-btn-translit');
+  btnLogs.classList.toggle('bg-blue-50',  isLogs);
+  btnLogs.classList.toggle('text-blue-700', isLogs);
+  btnLogs.classList.toggle('text-gray-600', !isLogs);
+  btnTr.classList.toggle('bg-blue-50',  !isLogs);
+  btnTr.classList.toggle('text-blue-700', !isLogs);
+  btnTr.classList.toggle('text-gray-600', isLogs);
+
+  if (!isLogs && !translitLoaded) loadTranslit();
+}
+
+// ─── Transliteration ─────────────────────────────────────────────────────────
+const TRANSLIT_MAP = {
+  'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z',
+  'и':'i','й':'j','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r',
+  'с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh',
+  'щ':'shch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya',
+  'А':'A','Б':'B','В':'V','Г':'G','Д':'D','Е':'E','Ё':'Yo','Ж':'Zh','З':'Z',
+  'И':'I','Й':'J','К':'K','Л':'L','М':'M','Н':'N','О':'O','П':'P','Р':'R',
+  'С':'S','Т':'T','У':'U','Ф':'F','Х':'Kh','Ц':'Ts','Ч':'Ch','Ш':'Sh',
+  'Щ':'Shch','Ъ':'','Ы':'Y','Ь':'','Э':'E','Ю':'Yu','Я':'Ya',
+  ' ':'-',
+};
+
+function transliterate(text) {
+  return text.split('').map(c => TRANSLIT_MAP[c] !== undefined ? TRANSLIT_MAP[c] : c).join('');
+}
+
+let ALL_ARTICLES = [];
+
+async function loadTranslit() {
+  try {
+    const r = await fetch('/batch/' + BATCH_ID + '/api/articles');
+    const d = await r.json();
+    document.getElementById('translit-loading').classList.add('hidden');
+    if (!d.ok || !d.articles.length) {
+      document.getElementById('translit-empty').classList.remove('hidden');
+      return;
+    }
+    ALL_ARTICLES = d.articles;
+    renderTranslit(ALL_ARTICLES);
+    document.getElementById('translit-table-wrap').classList.remove('hidden');
+    translitLoaded = true;
+  } catch(e) {
+    document.getElementById('translit-loading').textContent = 'Ошибка загрузки артикулов';
+  }
+}
+
+function renderTranslit(articles) {
+  const tbody = document.getElementById('translit-tbody');
+  tbody.innerHTML = articles.map(a => {
+    const tr = transliterate(a.display);
+    const isSame = tr === a.display;
+    return `<tr class="translit-row hover:bg-gray-50" data-orig="${a.display.toLowerCase()}">
+      <td class="px-4 py-2 text-gray-700 font-mono">${escHtml(a.display)}</td>
+      <td class="px-4 py-2 font-mono ${isSame ? 'text-gray-400' : 'text-gray-800'}">${escHtml(tr)}</td>
+      <td class="px-3 py-2 text-right">
+        <button onclick="copyRow('${escAttr(tr)}')"
+          class="text-[10px] text-gray-400 hover:text-blue-600 border border-gray-200 hover:border-blue-300 px-2 py-0.5 rounded transition-colors">
+          Копировать
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterTranslit(query) {
+  const q = query.toLowerCase().trim();
+  if (!q) { renderTranslit(ALL_ARTICLES); return; }
+  renderTranslit(ALL_ARTICLES.filter(a => a.display.toLowerCase().includes(q)));
+}
+
+function copyRow(text) {
+  navigator.clipboard.writeText(text).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+}
+
+function copyAllTranslit() {
+  const rows = ALL_ARTICLES.map(a => `${a.display}\t${transliterate(a.display)}`).join('\n');
+  navigator.clipboard.writeText(rows).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = rows; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  return s.replace(/'/g,'\\\'').replace(/"/g,'&quot;');
+}
 </script>
 {% endblock %}
