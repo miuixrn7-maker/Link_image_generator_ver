@@ -17,10 +17,13 @@ async def home(request: Request):
     if not is_authenticated(request):
         return RedirectResponse(url="/login", status_code=302)
     from app.metadata import list_all_batches
-    batches = list_all_batches()[:5]
-    return templates.TemplateResponse(request, "home.html", {
+    from app.cleanup import get_total_storage_usage
+    batches = list_all_batches()
+    storage = get_total_storage_usage()
+    return templates.TemplateResponse(request, "history.html", {
         "user": current_user(request),
-        "recent_batches": batches,
+        "batches": batches,
+        "storage": storage,
     })
 
 

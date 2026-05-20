@@ -19,11 +19,7 @@ router = APIRouter()
 async def history_page(request: Request):
     if not is_authenticated(request):
         return RedirectResponse(url="/login", status_code=302)
-    batches = list_all_batches()
-    return templates.TemplateResponse(request, "history.html", {
-        "user": current_user(request),
-        "batches": batches,
-    })
+    return RedirectResponse(url="/", status_code=302)
 
 
 @router.get("/logs", response_class=HTMLResponse)
